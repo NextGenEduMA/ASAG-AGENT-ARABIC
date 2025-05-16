@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الأسئلة المولدة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            direction: rtl;
+            font-family: 'Cairo', sans-serif;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="container max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">الأسئلة المولدة</h1>
+        <input type="hidden" id="session-id" value="{{ session_id }}">
+        {% if level %}
+            <p class="text-center text-gray-600 mb-4">مستوى الأسئلة: {{ {
+                1: "الصف الثالث (سهل)",
+                2: "الصف الرابع (بسيط)",
+                3: "الصف الخامس (متوسط)",
+                4: "الصف السادس (معقد)"
+            }[level] }}</p>
+        {% endif %}
+        {% for question in questions %}
+            <div class="question mb-8 border-b pb-6">
+                <h3 class="text-xl font-semibold text-blue-600 mb-4">السؤال {{ loop.index }}: {{ question.question }}</h3>
+                <div class="answer-box">
+                    <textarea id="answer-{{ loop.index0 }}" rows="5" placeholder="أدخل إجابتك هنا..." class="student-answer w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" data-index="{{ loop.index0 }}"></textarea>
+                    <button onclick="evaluateAnswer({{ loop.index0 }})" class="mt-4 bg-blue-600 text-white py-2 px-6 rounded-lg font-medium hover:bg-blue-700 transition">تقييم الإجابة</button>
+                    <div class="model-answer hidden mt-4" id="model-answer-{{ loop.index0 }}">
+                        <p class="text-gray-700"><strong>الإجابة النموذجية:</strong> {{ question.answer }}</p>
+                    </div>
+                    <div class="evaluation hidden mt-4 p-4 border border-gray-200 rounded-lg" id="evaluation-{{ loop.index0 }}">
+                        <p class="text-gray-700"><strong>النتيجة:</strong> <span class="score font-medium"></span></p>
+                        <p class="text-gray-700"><strong>الملاحظات:</strong> <span class="feedback"></span></p>
+                        <p class="text-gray-700"><strong>تفاصيل التقييم:</strong> <span class="detailed_feedback"></span></p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        <a href="{{ url_for('index') }}" class="block text-center">
+            <button class="w-full bg-gray-600 text-white py-3 rounded-lg font-medium hover:bg-gray-700 transition">العودة إلى الصفحة الرئيسية</button>
+        </a>
+    </div>
+    <script>
+        function evaluateAnswer(questionIndex) {
+            const studentAnswer = document.getElementById(`answer-${questionIndex}`).value;
+            const sessionId = document.getElementById('session-id').value;
+            
+            console.log(`Evaluating answer for question ${questionIndex}, session ${sessionId}`);
+            
+            if (!studentAnswer || studentAnswer.trim().length < 5) {
+                alert("الرجاء إدخال إجابة أطول");
+                return;
+            }
+            
+            // Get the button and disable it
+            const button = event.target; // Reference the clicked button
+            button.disabled = true;
+            button.textContent = "جاري التقييم...";
+            
+            fetch('/evaluate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'session_id': sessionId,
+                    'question_index': questionIndex,
+                    'student_answer': studentAnswer
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'حدث خطأ أثناء تقييم الإجابة');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                const evaluationDiv = document.getElementById(`evaluation-${questionIndex}`);
+                evaluationDiv.querySelector('.score').textContent = `${data.score}/5`;
+                evaluationDiv.querySelector('.feedback').textContent = data.feedback;
+                evaluationDiv.querySelector('.detailed_feedback').textContent = data.detailed_feedback.replace(/\n/g, ' ');
+                evaluationDiv.classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(error.message);
+            })
+            .finally(() => {
+                button.disabled = false;
+                button.textContent = "تقييم الإجابة";
+            });
+        }
+    </script>
+</body>
+</html>

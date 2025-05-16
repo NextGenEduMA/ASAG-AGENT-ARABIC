@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مساعد تعليمي عربي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            direction: rtl;
+            font-family: 'Cairo', sans-serif;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="container max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">مساعد تعليمي عربي</h1>
+        <div class="flash-messages mb-6">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <p class="{% if category == 'error' %}text-red-600{% else %}text-green-600{% endif %} text-center font-medium">{{ message }}</p>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+        <form action="{{ url_for('generate') }}" method="post" enctype="multipart/form-data" class="space-y-6">
+            <div class="input-type flex justify-center space-x-4">
+                <button type="button" id="text-toggle" class="toggle-btn bg-blue-600 text-white px-6 py-2 rounded-full font-medium hover:bg-blue-700 transition">نص مباشر</button>
+                <button type="button" id="file-toggle" class="toggle-btn bg-gray-300 text-gray-800 px-6 py-2 rounded-full font-medium hover:bg-gray-400 transition">تحميل ملف</button>
+            </div>
+            <div class="form-group" id="text-input">
+                <label for="content" class="block text-sm font-medium text-gray-700 mb-2">أدخل النص التعليمي:</label>
+                <textarea id="content" name="content" rows="8" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="أدخل النص هنا..."></textarea>
+            </div>
+            <div class="form-group hidden" id="file-input">
+                <label for="file" class="block text-sm font-medium text-gray-700 mb-2">تحميل ملف نصي:</label>
+                <input type="file" id="file" name="file" accept=".txt" class="w-full p-4 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-600 file:text-white file:cursor-pointer hover:file:bg-blue-700">
+            </div>
+            <div class="form-group">
+                <label for="num_questions" class="block text-sm font-medium text-gray-700 mb-2">عدد الأسئلة:</label>
+                <input type="number" id="num_questions" name="num_questions" value="5" min="1" max="10" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div class="form-group">
+                <label for="level" class="block text-sm font-medium text-gray-700 mb-2">اختر مستوى الصف:</label>
+                <select id="level" name="level" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="1">الصف الثالث (سهل)</option>
+                    <option value="2">الصف الرابع (بسيط)</option>
+                    <option value="3">الصف الخامس (متوسط)</option>
+                    <option value="4">الصف السادس (معقد)</option>
+                </select>
+            </div>
+            <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition">توليد الأسئلة</button>
+        </form>
+    </div>
+    <script>
+        const textToggle = document.getElementById('text-toggle');
+        const fileToggle = document.getElementById('file-toggle');
+        const textInput = document.getElementById('text-input');
+        const fileInput = document.getElementById('file-input');
+        const inputType = document.querySelector('input[name="input_type"]') || document.createElement('input');
+        inputType.type = 'hidden';
+        inputType.name = 'input_type';
+        document.querySelector('form').appendChild(inputType);
+
+        function setActive(toggle, otherToggle, input, otherInput, value) {
+            toggle.classList.add('bg-blue-600', 'text-white');
+            toggle.classList.remove('bg-gray-300', 'text-gray-800');
+            otherToggle.classList.add('bg-gray-300', 'text-gray-800');
+            otherToggle.classList.remove('bg-blue-600', 'text-white');
+            input.classList.remove('hidden');
+            otherInput.classList.add('hidden');
+            inputType.value = value;
+        }
+
+        textToggle.addEventListener('click', () => setActive(textToggle, fileToggle, textInput, fileInput, 'text'));
+        fileToggle.addEventListener('click', () => setActive(fileToggle, textToggle, fileInput, textInput, 'file'));
+
+        // Initialize with text input active
+        setActive(textToggle, fileToggle, textInput, fileInput, 'text');
+    </script>
+</body>
+</html>
