@@ -177,14 +177,14 @@ class ArabicEducationalAssistant:
         {student_answer}
         ---
 
-        قم بتقييم إجابة الطالب على مقياس من 1 إلى 5 نقاط، حيث:
-        1 = غير مقبول
-        2 = ضعيف
-        3 = متوسط
-        4 = جيد
-        5 = ممتاز
+        قم بتقييم إجابة الطالب على مقياس من 1 إلى 10 نقاط، حيث:
+        1-2 = غير مقبول
+        3-4 = ضعيف
+        5-6 = متوسط
+        7-8 = جيد
+        9-10 = ممتاز
 
-        قدم النتيجة في السطر الأول بالصيغة التالية: "النتيجة: X/5"
+        قدم النتيجة في السطر الأول بالصيغة التالية: "النتيجة: X/10"
 
         ثم قدم تقييمًا مفصلاً موجزًا (3-5 أسطر) يشرح نقاط القوة والضعف في إجابة الطالب.
         كن إيجابي ومشجعًا وقدم اقتراحات محددة للتحسين.
@@ -196,8 +196,8 @@ class ArabicEducationalAssistant:
                 return self.generate_fallback_evaluation(similarity)
 
             evaluation_text = response.text.strip()
-            score_match = re.search(r'النتيجة:\s*(\d)[/\.]5', evaluation_text)
-            score = int(score_match.group(1)) if score_match else round(similarity * 5)
+            score_match = re.search(r'النتيجة:\s*(\d+)[/\.]10', evaluation_text)
+            score = int(score_match.group(1)) if score_match else round(similarity * 10)
             feedback_lines = evaluation_text.split('\n')
             feedback = feedback_lines[0]
             detailed_feedback = '\n'.join(feedback_lines[1:]) if len(feedback_lines) > 1 else "تحتاج إلى مزيد من التفاصيل."

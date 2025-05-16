@@ -40,15 +40,14 @@ else:
         # Ping the database to verify connection
         mongo_client.admin.command('ping')
         print("MongoDB connection established successfully.")
-        db = mongo_client['educational_assistant']
-        questions_collection = db['questions']
-        responses_collection = db['responses']
+        db = mongo_client['asag_arabic']
+        data_collection = db['questions_collection']
+        print(f"data_collection initialized: {data_collection is not None}")
     except Exception as e:
         print(f"ERROR connecting to MongoDB: {e}")
         mongo_client = None
         db = None
-        questions_collection = None
-        responses_collection = None
+        data_collection = None
 
 class ArabicEducationalAssistant:
     def __init__(self, genai_model):
@@ -56,16 +55,33 @@ class ArabicEducationalAssistant:
         self.sentence_model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
         print("Educational Assistant initialized successfully!")
 
-    def generate_questions(self, content, num_questions=5):
+    def generate_questions(self, content, num_questions=5, level=1):
         if not content or len(content.strip()) < 50:
             return [{"question": "يرجى تقديم نص أطول لتوليد أسئلة ذات معنى.", "answer": "النص المقدم قصير جدًا."}]
 
+        class_mapping = {
+            1: "الصف الثالث (سهلة وبسيطة)",
+            2: "الصف الرابع (بسيطة مع تفكير بسيط)",
+            3: "الصف الخامس (متوسطة مع تحليل)",
+            4: "الصف السادس (معقدة مع تفكير نقدي)"
+        }
+        difficulty_description = class_mapping.get(level, "الصف الثالث (سهلة وبسيطة)")
+
+        if level == 1:
+            complexity_instruction = "الأسئلة يجب أن تكون قصيرة وسهلة جدًا، مناسبة لطلاب الصف الثالث. استخدم كلمات بسيطة جدًا وتأكد أن الإجابات تتطلب استرجاع معلومات مباشرة من النص."
+        elif level == 2:
+            complexity_instruction = "الأسئلة يجب أن تكون بسيطة ولكن تتطلب تفكيرًا بسيطًا، مناسبة لطلاب الصف الرابع. استخدم كلمات بسيطة مع التركيز على أسئلة تشرح 'لماذا' أو 'كيف' بشكل مباشر."
+        elif level == 3:
+            complexity_instruction = "الأسئلة يجب أن تكون متوسطة التعقيد، مناسبة لطلاب الصف الخامس. ركز على أسئلة تتطلب التحليل أو المقارنة، مع استخدام كلمات مناسبة لمستوى الفهم هذا."
+        else:
+            complexity_instruction = "الأسئلة يجب أن تكون معقدة وتتطلب تفكيرًا نقديًا، مناسبة لطلاب الصف السادس. ركز على أسئلة تتطلب استنتاج الأسباب والنتائج، التطبيقات العملية، أو المقارنات العميقة."
+
         prompt = f"""
-        أنت مساعد تعليمي متخصص في اللغة العربية. مهمتك هي قراءة النص التالي وإنشاء {num_questions} أسئلة **مفتوحة** مع إجاباتها النموذجية.
+        أنت مساعد تعليمي متخصص في اللغة العربية. مهمتك هي قراءة النص التالي وإنشاء {num_questions} أسئلة **مفتوحة** مع إجاباتها النموذجية لـ {difficulty_description}.
 
         يجب أن تتطلب هذه الأسئلة تفكيرًا وفهمًا للنص، وليس مجرد استرجاع مباشر للمعلومات.
-        ركز على الأسباب، النتائج، المقارنات، أو التطبيقات المحتملة المذكورة أو التي يمكن استنتاجها من النص.
-        تجنب الأسئلة التي يمكن الإجابة عليها بـ "نعم" أو "لا" أو بكلمة واحدة.
+        {complexity_instruction}
+        تجنب الأسئلة التي يمكن الإجابة عليها بـ 'نعم' أو 'لا' أو بكلمة واحدة.
 
         لكل سؤال، قدم:
         1. السؤال
@@ -171,7 +187,7 @@ class ArabicEducationalAssistant:
         قدم النتيجة في السطر الأول بالصيغة التالية: "النتيجة: X/5"
 
         ثم قدم تقييمًا مفصلاً موجزًا (3-5 أسطر) يشرح نقاط القوة والضعف في إجابة الطالب.
-        كن إيجابيًا ومشجعًا وقدم اقتراحات محددة للتحسين.
+        كن إيجابي ومشجعًا وقدم اقتراحات محددة للتحسين.
         """
 
         try:
@@ -227,7 +243,7 @@ else:
 def index():
     if not assistant:
         flash("ERROR: System not initialized. Please check API key configuration.", "error")
-    if not mongo_client:
+    if mongo_client is None:
         flash("ERROR: MongoDB not initialized. Please check MONGO_URI configuration.", "error")
     return render_template('index.html')
 
@@ -236,8 +252,17 @@ def generate():
     if not assistant:
         flash("System not initialized. Please check API key configuration.", "error")
         return redirect(url_for('index'))
-    if not mongo_client:
-        flash("MongoDB not initialized. Please check MONGO_URI configuration.", "error")
+    
+    # Check MongoDB connection
+    print(f"mongo_client: {mongo_client}, data_collection: {data_collection}")
+    if mongo_client is None or data_collection is None:
+        flash("ERROR: MongoDB connection failed. Please check MONGO_URI configuration.", "error")
+        return redirect(url_for('index'))
+
+    try:
+        mongo_client.admin.command('ping')
+    except Exception as e:
+        flash(f"MongoDB connection error: {e}", "error")
         return redirect(url_for('index'))
 
     content = ""
@@ -268,23 +293,35 @@ def generate():
 
     try:
         num_questions = int(request.form.get('num_questions', 5))
-        qa_pairs = assistant.generate_questions(content, num_questions)
+        level = int(request.form.get('level', 1))
+        if level < 1 or level > 4:
+            flash("Invalid level selected. Please choose a class between 3rd and 6th.", "error")
+            return redirect(url_for('index'))
+
+        qa_pairs = assistant.generate_questions(content, num_questions, level)
         if not qa_pairs:
             flash("Failed to generate questions. Please try again.", "error")
             return redirect(url_for('index'))
 
         # Store questions in MongoDB
-        session_id = str(uuid.uuid4())  # Unique session ID for this set of questions
-        questions_doc = {
-            "session_id": session_id,
-            "content": content,
-            "questions": qa_pairs,
-            "created_at": datetime.datetime.utcnow()
-        }
-        questions_collection.insert_one(questions_doc)
+        session_id = str(uuid.uuid4())
+        try:
+            questions_doc = {
+                "session_id": session_id,
+                "content": content,
+                "questions": qa_pairs,
+                "level": level,
+                "created_at": datetime.datetime.utcnow()
+            }
+            result = data_collection.insert_one(questions_doc)
+            print(f"Document inserted with ID: {result.inserted_id}")
+        except Exception as e:
+            print(f"MongoDB insertion error: {e}")
+            flash(f"Database error: {e}", "error")
+            return redirect(url_for('index'))
 
         flash("Questions generated successfully!", "success")
-        return render_template('questions.html', questions=qa_pairs, session_id=session_id)
+        return render_template('questions.html', questions=qa_pairs, session_id=session_id, level=level)
     except Exception as e:
         flash(f"Error generating questions: {e}", "error")
         return redirect(url_for('index'))
@@ -293,26 +330,49 @@ def generate():
 def evaluate():
     if not assistant:
         return jsonify({"error": "System not initialized."}), 500
-    if not mongo_client:
-        return jsonify({"error": "MongoDB not initialized."}), 500
+    
+    if mongo_client is None or data_collection is None:
+        return jsonify({"error": "MongoDB connection failed."}), 500
+
+    try:
+        mongo_client.admin.command('ping')
+    except Exception as e:
+        print(f"MongoDB connection error: {e}")
+        return jsonify({"error": f"MongoDB connection error: {e}"}), 500
 
     session_id = request.form.get('session_id', '')
-    question_index = int(request.form.get('question_index', -1))
+    question_index = request.form.get('question_index', -1)
     student_answer = request.form.get('student_answer', '')
 
-    # Retrieve questions from MongoDB using session_id
-    session_doc = questions_collection.find_one({"session_id": session_id})
-    if not session_doc or question_index < 0 or question_index >= len(session_doc['questions']):
-        return jsonify({"error": "Invalid session or question number."}), 400
+    print(f"Received: session_id={session_id}, question_index={question_index}, student_answer={student_answer}")
+
+    try:
+        question_index = int(question_index)
+    except ValueError:
+        print("Invalid question_index: not an integer")
+        return jsonify({"error": "Question index must be an integer."}), 400
+
+    try:
+        session_doc = data_collection.find_one({"session_id": session_id})
+        if not session_doc:
+            print(f"No session found for session_id: {session_id}")
+            return jsonify({"error": f"Invalid session ID: {session_id}"}), 400
+    except Exception as e:
+        print(f"Error querying session: {e}")
+        return jsonify({"error": f"Database error: {e}"}), 500
+
+    if question_index < 0 or question_index >= len(session_doc['questions']):
+        print(f"Invalid question_index: {question_index}, questions length: {len(session_doc['questions'])}")
+        return jsonify({"error": "Invalid question number."}), 400
 
     if not student_answer or len(student_answer.strip()) < 5:
+        print("Student answer too short")
         return jsonify({"error": "Answer is too short."}), 400
 
     try:
         reference_answer = session_doc['questions'][question_index]['answer']
         evaluation = assistant.evaluate_answer(reference_answer, student_answer)
 
-        # Store student response and evaluation in MongoDB
         response_doc = {
             "session_id": session_id,
             "question_index": question_index,
@@ -320,10 +380,11 @@ def evaluate():
             "evaluation": evaluation,
             "created_at": datetime.datetime.utcnow()
         }
-        responses_collection.insert_one(response_doc)
+        data_collection.insert_one(response_doc)
 
         return jsonify(evaluation)
     except Exception as e:
+        print(f"Error evaluating answer: {e}")
         return jsonify({"error": f"Error evaluating answer: {e}"}), 500
 
 if __name__ == '__main__':
