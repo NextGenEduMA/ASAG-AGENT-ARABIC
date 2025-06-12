@@ -2,6 +2,10 @@
 
 This application is an intelligent educational tool designed to generate and evaluate educational questions in Arabic. It uses Google's Gemini AI model to create customized educational questions based on provided text content and evaluate student answers.
 
+## License
+
+Developed by Siham EL kouaze
+
 ## Features
 
 - Generate open-ended questions with model answers from educational texts
