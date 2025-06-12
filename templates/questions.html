@@ -123,10 +123,12 @@
                     <div class="bg-white bg-opacity-20 px-4 py-2 rounded-lg">
                         <p class="text-blue-100">مستوى الأسئلة:</p>
                         <p class="font-bold">{{ {
-                            1: "الصف الثالث (سهل)",
-                            2: "الصف الرابع (بسيط)",
-                            3: "الصف الخامس (متوسط)",
-                            4: "الصف السادس (معقد)"
+                            1: "الصف الأول (سهلة جدًا)",
+                            2: "الصف الثاني (سهلة)",
+                            3: "الصف الثالث (سهلة مع تحليل)",
+                            4: "الصف الرابع (سهلة مع تفكير)",
+                            5: "الصف الخامس (متوسطة)",
+                            6: "الصف السادس (متوسطة مع استنتاج)"
                         }[level] }}</p>
                     </div>
                     <div class="bg-white bg-opacity-20 px-4 py-2 rounded-lg">
@@ -196,7 +198,7 @@
                                     <div class="score-indicator bg-blue-100 h-8 w-8 rounded-full flex items-center justify-center">
                                         <span class="score font-bold text-blue-600">-</span>
                                     </div>
-                                    <span class="text-gray-500 mr-2">/5</span>
+                                    <span class="text-gray-500 mr-2">/10</span>
                                 </div>
                             </div>
                             
@@ -269,7 +271,7 @@
             
             console.log(`Evaluating answer for question ${questionIndex}, session ${sessionId}`);
             
-            if (!studentAnswer || studentAnswer.trim().length < 5) {
+            if (!studentAnswer || studentAnswer.trim().length < 6) {
                 // Create error toast
                 const toast = document.createElement('div');
                 toast.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 flex items-center';
@@ -330,23 +332,23 @@
                 evaluationDiv.querySelector('.detailed_feedback').textContent = data.detailed_feedback.replace(/\n/g, ' ');
                 
                 // Update the score bar width based on the score
-                const scorePercentage = (data.score / 5) * 100;
+                const scorePercentage = (data.score / 10) * 100;
                 scoreBar.style.width = `${scorePercentage}%`;
                 
                 // Update score indicator color based on score
                 scoreIndicator.classList.remove('bg-blue-100', 'bg-green-100', 'bg-yellow-100', 'bg-red-100');
                 scoreIndicator.querySelector('.score').classList.remove('text-blue-600', 'text-green-600', 'text-yellow-600', 'text-red-600');
                 
-                if (data.score >= 4) {
+                if (data.score >= 8) {
                     scoreIndicator.classList.add('bg-green-100');
                     scoreIndicator.querySelector('.score').classList.add('text-green-600');
                     
                     // Add confetti effect for high scores
                     createConfetti(questionCard);
-                } else if (data.score >= 3) {
+                } else if (data.score >= 6) {
                     scoreIndicator.classList.add('bg-blue-100');
                     scoreIndicator.querySelector('.score').classList.add('text-blue-600');
-                } else if (data.score >= 2) {
+                } else if (data.score >= 4) {
                     scoreIndicator.classList.add('bg-yellow-100');
                     scoreIndicator.querySelector('.score').classList.add('text-yellow-600');
                 } else {
@@ -376,7 +378,7 @@
                 toast.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 flex items-center';
                 toast.innerHTML = `
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414-1.414z" clip-rule="evenodd" />
                     </svg>
                     ${error.message}
                 `;
@@ -422,14 +424,14 @@
                     if (isHidden) {
                         this.innerHTML = `
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
+                                <path fill-rule="evenodd" d="14.707 12.707a1 1 0 01-1.414 0L-1 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4 4a1 1 0 4-4a4 1 0 0 0-0l4 4a1 0 0 0 0 0z1 a1 414z" clip-rule="evenodd" />
                             </svg>
                             إخفاء الإجابة النموذجية
                         `;
                     } else {
                         this.innerHTML = `
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                <path fill-rule="evenodd" d="5.293 7.293a1 1 0 0 1.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4-4a1 1 0 01-1.414 0l-4-4a1 0 0 1 0-1.414z1" clip-rule="evenodd" />
                             </svg>
                             عرض الإجابة النموذجية
                         `;
