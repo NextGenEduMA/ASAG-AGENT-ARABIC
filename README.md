@@ -379,6 +379,25 @@ Developed by Siham EL kouaze
 4. Test thoroughly with AI models
 5. Submit a pull request
 
-## 📞 Support
+## 📸 Screenshots
 
-For issues and questions related to AI functionality, please check the logs in `debug.log` or contact the development team.
+### 1. Main Interface - AI Question Generation
+![Screen 1](screenshots/1.png)
+*The main interface where users can input Arabic educational text and configure AI settings for intelligent question generation using Google Gemini*
+
+### 2. AI Question Preview & Professor Editing
+![Screen 2](screenshots/2.png)
+*Preview interface displaying AI-generated questions with full editing capabilities for professors to review and modify before publishing to students*
+
+### 3. Student Evaluation Interface
+![Screen 3](screenshots/3.png)
+*Student interface for answering questions with the original reference text displayed, featuring Arabic RTL support and clean design*
+
+### 4. AI-Powered Answer Evaluation & Feedback
+![Screen 4](screenshots/4.png)
+*Real-time AI evaluation showing semantic similarity scores and personalized feedback in Arabic using advanced deep learning models*
+
+### ChromaDB Vector Database Storage
+![ChromaDB Storage](screenshots/chromadb.png)
+*JSON view of the ChromaDB vector database showing stored questions and answers with embeddings for semantic search and RAG capabilities*
+

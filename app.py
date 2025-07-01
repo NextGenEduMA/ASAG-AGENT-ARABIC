@@ -5,6 +5,7 @@ import uuid
 import time
 from datetime import datetime
 import json
+import re
 import os
 from functools import lru_cache
 from sentence_transformers import SentenceTransformer
@@ -203,11 +204,17 @@ def save_questions():
             logger.info(f"Saved {len(questions)} questions and content to MongoDB.")
         
         if chroma_collection is not None:
-            ids = [str(uuid.uuid4()) for _ in questions]
-            docs = [qa['question'] for qa in questions]
-            metadatas = [{'answer': qa['answer']} for qa in questions]
-            chroma_collection.add(ids=ids, documents=docs, metadatas=metadatas)
-            logger.info(f"Added {len(questions)} questions to ChromaDB.")
+            try:
+                ids = [str(uuid.uuid4()) for _ in questions]
+                docs = [qa['question'] for qa in questions]
+                metadatas = [{'answer': qa['answer']} for qa in questions]
+                logger.info(f"Attempting to add {len(questions)} questions to ChromaDB...")
+                chroma_collection.add(ids=ids, documents=docs, metadatas=metadatas)
+                logger.info(f"Successfully added {len(questions)} questions to ChromaDB.")
+            except Exception as e:
+                logger.error(f"Failed to add questions to ChromaDB: {e}")
+        else:
+            logger.warning("ChromaDB collection is None - questions not saved to ChromaDB")
             
         flash("Questions saved successfully!", "success")
         return redirect(url_for('questions'))
@@ -245,28 +252,107 @@ def evaluate_set(set_id):
 @app.route('/evaluate_answer', methods=['POST'])
 def evaluate_answer():
     if not similarity_model:
-        return jsonify({"error": "Evaluation service not available"}), 503
+        return jsonify({"error": "خدمة التقييم غير متوفرة حاليًا."}), 503
+    
     try:
         data = request.get_json()
-        student_answer = data.get('student_answer')
-        model_answer = data.get('model_answer')
-        if not student_answer or not model_answer:
-            return jsonify({"error": "Missing data for evaluation"}), 400
-        embeddings = similarity_model.encode([student_answer, model_answer])
-        similarity_score = cosine_similarity(embeddings[0].reshape(1, -1), embeddings[1].reshape(1, -1))[0][0]
-        final_score = round(float(similarity_score) * 10, 1)
-        if final_score >= 8.5:
-            feedback = "إجابة ممتازة ومطابقة للمعنى المطلوب."
-        elif final_score >= 6.5:
-            feedback = "إجابة جيدة، تحتوي على النقاط الأساسية."
-        elif final_score >= 4.0:
-            feedback = "إجابتك صحيحة جزئياً، لكنها تفتقد بعض التفاصيل المهمة."
-        else:
-            feedback = "الإجابة لا تتطابق بشكل كبير مع الجواب النموذجي. حاول مرة أخرى."
+        if not data:
+            logger.error("No JSON data received in evaluate_answer")
+            return jsonify({"error": "لم يتم استلام بيانات."}), 400
+            
+        student_answer = data.get('student_answer', '').strip()
+        model_answer = data.get('model_answer', '').strip()
+        question = data.get('question', '').strip()
+        
+        logger.info(f"Evaluation request - Question: {question[:50]}..., Student: {student_answer[:50]}..., Model: {model_answer[:50]}...")
+        
+        if not student_answer or not model_answer or not question:
+            logger.error(f"Missing data - Student: {bool(student_answer)}, Model: {bool(model_answer)}, Question: {bool(question)}")
+            return jsonify({"error": "بيانات التقييم غير كاملة."}), 400
+        
+        # Use Gemini for both scoring and feedback
+        final_score = None
+        feedback = None
+        
+        if assistant.model:
+            prompt = f"""
+            You are an educational assessment expert. Evaluate the student's answer compared to the model answer for the given question.
+            
+            Provide your response in the following JSON format:
+            {{
+                "score": [number from 0 to 10],
+                "feedback": "[detailed feedback in Arabic]"
+            }}
+            
+            Scoring criteria:
+            - 9-10: Excellent, complete and accurate answer
+            - 7-8: Good answer with minor gaps
+            - 5-6: Adequate answer but missing key points
+            - 3-4: Partial answer with significant gaps
+            - 0-2: Incorrect or irrelevant answer
+            
+            Question: {question}
+            Student Answer: {student_answer}
+            Model Answer: {model_answer}
+            
+            Provide encouraging and constructive feedback in Arabic. Focus on what the student did well and suggest specific improvements.
+            """
+            try:
+                response = assistant.model.generate_content(prompt)
+                response_text = response.text.strip()
+                
+                # Try to parse JSON response
+                import re
+                json_match = re.search(r'\{[^{}]*"score"[^{}]*"feedback"[^{}]*\}', response_text, re.DOTALL)
+                if json_match:
+                    json_str = json_match.group(0)
+                    evaluation_data = json.loads(json_str)
+                    final_score = float(evaluation_data.get('score', 0))
+                    feedback = evaluation_data.get('feedback', '')
+                else:
+                    # If JSON parsing fails, try to extract score and feedback manually
+                    score_match = re.search(r'"score"\s*:\s*(\d+(?:\.\d+)?)', response_text)
+                    feedback_match = re.search(r'"feedback"\s*:\s*"([^"]+)"', response_text)
+                    
+                    if score_match:
+                        final_score = float(score_match.group(1))
+                    if feedback_match:
+                        feedback = feedback_match.group(1)
+                        
+                logger.info(f"Gemini evaluation - Score: {final_score}, Feedback: {feedback[:100] if feedback else 'None'}...")
+                
+            except Exception as e:
+                logger.error(f"Error getting evaluation from Gemini: {e}")
+                final_score = None
+                feedback = None
+        
+        # Fallback to local similarity model if Gemini fails
+        if final_score is None or feedback is None:
+            logger.warning("Falling back to local similarity model")
+            embeddings = similarity_model.encode([student_answer, model_answer])
+            similarity_score = cosine_similarity(embeddings[0].reshape(1, -1), embeddings[1].reshape(1, -1))[0][0]
+            final_score = round(float(similarity_score) * 10, 1)
+            
+            if final_score >= 8.5:
+                feedback = "إجابة ممتازة ومطابقة للمعنى المطلوب."
+            elif final_score >= 6.5:
+                feedback = "إجابة جيدة، تحتوي على النقاط الأساسية."
+            elif final_score >= 4.0:
+                feedback = "إجابتك صحيحة جزئياً، لكنها تفتقد بعض التفاصيل المهمة."
+            else:
+                feedback = "الإجابة لا تتطابق بشكل كبير مع الجواب النموذجي. حاول مرة أخرى."
+        
+        # Ensure score is within valid range
+        final_score = max(0, min(10, final_score))
+        
+        # Log the evaluation
+        logger.info(f"Final evaluation - Score: {final_score}, Feedback: {feedback[:100]}...")
+        
         return jsonify({"score": final_score, "feedback": feedback})
+    
     except Exception as e:
         logger.error(f"Error in /evaluate_answer: {e}", exc_info=True)
-        return jsonify({"error": "Internal error during local evaluation"}), 500
+        return jsonify({"error": "حدث خطأ داخلي أثناء التقييم."}), 500
 
 @app.route('/save_evaluation', methods=['POST'])
 def save_evaluation():
@@ -294,6 +380,39 @@ def save_evaluation():
         logger.error(f"Error saving evaluation: {e}", exc_info=True)
         flash("An error occurred while saving the evaluation.", "error")
         return redirect(url_for('questions'))
+
+@app.route('/test')
+def test():
+    return jsonify({"status": "working"})
+
+@app.route('/chromadb')
+def view_chromadb():
+    if chroma_collection is None:
+        return jsonify({"error": "ChromaDB not initialized"}), 503
+    
+    try:
+        # Get all data from ChromaDB
+        result = chroma_collection.get()
+        
+        data = {
+            "collection_name": chroma_collection.name,
+            "total_items": len(result['ids']),
+            "items": []
+        }
+        
+        for i in range(len(result['ids'])):
+            item = {
+                "id": result['ids'][i],
+                "document": result['documents'][i],
+                "metadata": result['metadatas'][i] if result['metadatas'] else None
+            }
+            data["items"].append(item)
+        
+        return jsonify(data)
+    
+    except Exception as e:
+        logger.error(f"Error retrieving ChromaDB data: {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

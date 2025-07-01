@@ -6,305 +6,475 @@
     <title>المساعد التعليمي الذكي</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     <style>
         body {
             direction: rtl;
             font-family: 'Tajawal', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            min-height: 100vh;
         }
-        .gradient-button {
-            background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
-            transition: all 0.3s ease;
+
+        /* Animated character styles */
+        .character {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            animation: bounce 2s infinite;
         }
-        .gradient-button:hover {
-            background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+
+        .character-body {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 50%;
+            position: relative;
+            margin: 0 auto;
         }
-        .toggle-btn {
-            transition: all 0.3s ease;
-        }
-        .toggle-btn.active {
-            transform: translateY(-2px);
-        }
-        .animated-bg {
+
+        .character-face {
             position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .eye {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            position: relative;
+            display: inline-block;
+            margin: 0 3px;
+        }
+
+        .eye::after {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #333;
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            animation: blink 3s infinite;
+        }
+
+        .mouth {
+            width: 20px;
+            height: 12px;
+            border: 3px solid white;
+            border-top: none;
+            border-radius: 0 0 20px 20px;
+            margin: 8px auto 0;
+        }
+
+        .character-arms {
+            position: absolute;
+            top: 30px;
+            width: 100%;
+        }
+
+        .arm {
+            width: 30px;
+            height: 6px;
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 10px;
+            position: absolute;
+            animation: wave 2s infinite ease-in-out;
+        }
+
+        .arm-left {
+            left: -15px;
+            transform-origin: right center;
+        }
+
+        .arm-right {
+            right: -15px;
+            transform-origin: left center;
+            animation-delay: 0.5s;
+        }
+
+        .sparkles {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .sparkle {
+            width: 8px;
+            height: 8px;
+            background: #ffd700;
+            position: absolute;
+            border-radius: 50%;
+            animation: sparkle 1.5s infinite;
+        }
+
+        .sparkle:nth-child(1) { left: 0; animation-delay: 0s; }
+        .sparkle:nth-child(2) { left: 15px; animation-delay: 0.3s; }
+        .sparkle:nth-child(3) { left: 30px; animation-delay: 0.6s; }
+
+        /* Animations */
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        @keyframes blink {
+            0%, 90%, 100% { transform: scaleY(1); }
+            95% { transform: scaleY(0.1); }
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(20deg); }
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Card styles */
+        .cute-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .cute-button {
+            background: linear-gradient(45deg, #ff6b6b, #ffa726);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .cute-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .cute-input {
+            border: 3px solid #e1f5fe;
+            border-radius: 20px;
+            padding: 15px 20px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .cute-input:focus {
+            border-color: #4facfe;
+            outline: none;
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(79, 172, 254, 0.2);
+        }
+
+        .grade-option {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 15px;
+            margin: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+
+        .grade-option:hover {
+            transform: translateY(-5px) rotate(2deg);
+            border-color: #ffd700;
+        }
+
+        .grade-option input:checked + .grade-label {
+            background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+            color: #333;
+        }
+
+        .floating-elements {
+            position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
             z-index: -1;
-            overflow: hidden;
         }
-        .animated-bg::before {
-            content: '';
+
+        .floating-shape {
             position: absolute;
-            top: -10%;
-            left: -10%;
-            width: 120%;
-            height: 120%;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 25%, transparent 50%);
-            animation: pulse 15s infinite;
+            opacity: 0.6;
+            animation: float 6s ease-in-out infinite;
         }
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.5; }
-            50% { transform: scale(1.05); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 0.5; }
+
+        .shape-1 {
+            top: 10%;
+            left: 10%;
+            width: 50px;
+            height: 50px;
+            background: #ff9a9e;
+            border-radius: 50%;
+            animation-delay: 0s;
         }
-        .floating {
-            animation: floating 3s ease-in-out infinite;
+
+        .shape-2 {
+            top: 20%;
+            right: 15%;
+            width: 30px;
+            height: 30px;
+            background: #a8edea;
+            transform: rotate(45deg);
+            animation-delay: 1s;
         }
-        @keyframes floating {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
+
+        .shape-3 {
+            bottom: 20%;
+            left: 20%;
+            width: 40px;
+            height: 40px;
+            background: #ffd89b;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            animation-delay: 2s;
         }
-        .card-hover {
-            transition: all 0.3s ease;
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-20px) rotate(120deg); }
+            66% { transform: translateY(10px) rotate(240deg); }
         }
-        .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-        .input-focus {
-            transition: all 0.3s ease;
-        }
-        .input-focus:focus {
-            transform: scale(1.02);
+
+        .number-display {
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 8px 20px rgba(79, 172, 254, 0.3);
         }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <div class="animated-bg"></div>
-    
-    <div class="container max-w-2xl mx-auto">
-        <div class="bg-white rounded-3xl shadow-xl overflow-hidden card-hover">
-            <!-- Header with decorative elements -->
-            <div class="relative bg-gradient-to-l from-blue-600 to-indigo-700 pt-10 pb-14 px-8 text-white">
-                <div class="absolute top-4 right-4 bg-white bg-opacity-20 p-2 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
+<body>
+    <!-- Floating background elements -->
+    <div class="floating-elements">
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        <div class="floating-shape shape-3"></div>
+    </div>
+
+    <div class="container max-w-4xl mx-auto py-8 px-4">
+        <!-- Header with animated character -->
+        <div class="text-center mb-8">
+            <div class="character mx-auto mb-6">
+                <div class="sparkles">
+                    <div class="sparkle"></div>
+                    <div class="sparkle"></div>
+                    <div class="sparkle"></div>
                 </div>
-                <div class="absolute top-4 left-4 bg-white bg-opacity-20 p-2 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                    </svg>
+                <div class="character-body">
+                    <div class="character-arms">
+                        <div class="arm arm-left"></div>
+                        <div class="arm arm-right"></div>
+                    </div>
+                    <div class="character-face">
+                        <div class="eye"></div>
+                        <div class="eye"></div>
+                        <div class="mouth"></div>
+                    </div>
                 </div>
-                <h1 class="text-4xl font-bold text-center mb-2 floating">المساعد التعليمي الذكي</h1>
-                <p class="text-center text-blue-100 opacity-90">أداة ذكية لإنشاء أسئلة تعليمية مخصصة للطلاب</p>
-                
-                <!-- Decorative circles -->
-                <div class="absolute left-10 bottom-4 w-16 h-16 bg-white bg-opacity-10 rounded-full"></div>
-                <div class="absolute left-20 bottom-8 w-8 h-8 bg-white bg-opacity-10 rounded-full"></div>
-                <div class="absolute right-12 bottom-6 w-12 h-12 bg-white bg-opacity-10 rounded-full"></div>
             </div>
-            
-            <!-- Main content -->
-            <div class="p-8">
-                <div class="flash-messages mb-6">
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="{% if category == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %} px-4 py-3 rounded-lg mb-4 flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                                        {% if category == 'error' %}
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                        {% else %}
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                                        {% endif %}
-                                    </svg>
-                                    <p class="font-medium">{{ message }}</p>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-                </div>
+            <h1 class="text-4xl font-bold text-white mb-2" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                🌟 المساعد التعليمي الذكي 🌟
+            </h1>
+            <p class="text-xl text-white opacity-90">صديقك في رحلة التعلم المليئة بالمرح!</p>
+        </div>
+
+        <!-- Main form card -->
+        <div class="cute-card p-8">
+            <form action="{{ url_for('generate') }}" method="post" enctype="multipart/form-data" class="space-y-8">
                 
-                <form action="{{ url_for('generate') }}" method="post" enctype="multipart/form-data" class="space-y-6">
-                    <!-- Input type toggle -->
-                    <div class="bg-gray-50 p-2 rounded-xl flex justify-center space-x-2">
-                        <button type="button" id="text-toggle" class="toggle-btn active px-6 py-3 rounded-xl font-medium text-white bg-blue-600 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
-                            </svg>
-                            نص مباشر
-                        </button>
-                        <button type="button" id="file-toggle" class="toggle-btn px-6 py-3 rounded-xl font-medium bg-gray-200 text-gray-700 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clip-rule="evenodd" />
-                            </svg>
-                            تحميل ملف
-                        </button>
+                <!-- Input type toggle -->
+                <div class="flex justify-center">
+                    <div class="bg-gradient-to-r from-purple-400 to-pink-400 p-1 rounded-full">
+                        <div class="flex bg-white rounded-full p-2">
+                            <button type="button" id="text-toggle" class="px-6 py-3 rounded-full font-bold text-purple-600 bg-purple-100 transition-all">
+                                📝 اكتب النص
+                            </button>
+                            <button type="button" id="file-toggle" class="px-6 py-3 rounded-full font-bold text-gray-600 transition-all">
+                                📎 ارفع ملف
+                            </button>
+                        </div>
                     </div>
-                    
-                    <!-- Text input -->
-                    <div class="form-group" id="text-input">
-                        <label for="content" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
-                            </svg>
-                            أدخل النص التعليمي:
+                </div>
+
+                <!-- Text input -->
+                <div id="text-input" class="space-y-4">
+                    <label class="block text-xl font-bold text-purple-700 text-center">
+                        ✨ شاركني النص الذي تريد تحويله لأسئلة مثيرة! ✨
+                    </label>
+                    <textarea name="content" rows="6" class="w-full cute-input" 
+                              placeholder="اكتب هنا النص التعليمي... سأحوله إلى أسئلة رائعة! 🎯"></textarea>
+                </div>
+
+                <!-- File input -->
+                <div id="file-input" class="hidden space-y-4">
+                    <label class="block text-xl font-bold text-purple-700 text-center">
+                        📁 ارفع ملفك النصي هنا
+                    </label>
+                    <div class="border-4 border-dashed border-purple-300 rounded-3xl p-8 text-center bg-purple-50 hover:bg-purple-100 transition-all">
+                        <input type="file" name="file" accept=".txt" class="hidden" id="file-input-field">
+                        <label for="file-input-field" class="cursor-pointer">
+                            <div class="text-6xl mb-4">📤</div>
+                            <p class="text-lg font-bold text-purple-700">اسحب الملف هنا أو اضغط للاختيار</p>
+                            <p class="text-sm text-purple-500">ملفات txt فقط</p>
                         </label>
-                        <textarea id="content" name="content" rows="8" class="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-focus" placeholder="أدخل النص التعليمي هنا..."></textarea>
                     </div>
-                    
-                    <!-- File input -->
-                    <div class="form-group hidden" id="file-input">
-                        <label for="file" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clip-rule="evenodd" />
-                            </svg>
-                            تحميل ملف نصي:
-                        </label>
-                        <div class="relative border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-500 transition-colors">
-                            <input type="file" id="file" name="file" accept=".txt" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                            <div class="flex flex-col items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                </svg>
-                                <p class="text-gray-700 mb-1">قم بسحب الملف هنا أو انقر للتحميل</p>
-                                <p class="text-xs text-gray-500">(ملفات txt.)</p>
-                                <p id="file-name" class="mt-2 text-sm text-blue-600 hidden"></p>
+                </div>
+
+                <!-- Number of questions -->
+                <div class="bg-gradient-to-r from-blue-100 to-purple-100 p-6 rounded-3xl">
+                    <label class="block text-xl font-bold text-center text-purple-700 mb-6">
+                        🎲 كم سؤال تريد؟
+                    </label>
+                    <div class="flex items-center justify-center space-x-6 space-x-reverse">
+                        <input type="range" id="num_questions_range" name="num_questions" min="1" max="10" value="5" 
+                               class="flex-1 h-3 bg-purple-200 rounded-full appearance-none cursor-pointer">
+                        <div class="number-display">
+                            <span id="questions-display">5</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grade selection -->
+                <div class="space-y-6">
+                    <h3 class="text-xl font-bold text-center text-purple-700">🎓 اختر صفك الدراسي</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <label class="grade-option">
+                            <input type="radio" name="level" value="1" class="hidden" checked>
+                            <div class="grade-label text-center">
+                                <div class="text-3xl mb-2">1️⃣</div>
+                                <div class="font-bold">الصف الأول</div>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Questions count -->
-                    <div class="form-group bg-gray-50 p-6 rounded-xl">
-                        <label for="num_questions" class="block text-sm font-medium text-gray-700 mb-3 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
-                            </svg>
-                            عدد الأسئلة:
                         </label>
-                        <div class="flex items-center justify-between">
-                            <input type="range" id="num_questions_range" min="1" max="10" value="5" class="w-4/5 h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer">
-                            <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                                <input type="number" id="num_questions" name="num_questions" value="5" min="1" max="10" class="w-10 bg-transparent text-center focus:outline-none">
+                        <label class="grade-option">
+                            <input type="radio" name="level" value="2" class="hidden">
+                            <div class="grade-label text-center">
+                                <div class="text-3xl mb-2">2️⃣</div>
+                                <div class="font-bold">الصف الثاني</div>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Grade level -->
-                    <div class="form-group">
-                        <label for="level" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
-                            </svg>
-                            اختر مستوى الصف:
                         </label>
-                        <div class="grid grid-cols-2 gap-4">
-                            <label class="flex items-center space-x-3 space-x-reverse bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors">
-                                <input type="radio" name="level" value="1" class="form-radio h-5 w-5 text-blue-600" checked>
-                                <span class="flex flex-col">
-                                    <span class="text-gray-900 font-medium">الصف الأول</span>
-                                </span>
-                            </label>
-                            <label class="flex items-center space-x-3 space-x-reverse bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors">
-                                <input type="radio" name="level" value="2" class="form-radio h-5 w-5 text-blue-600">
-                                <span class="flex flex-col">
-                                    <span class="text-gray-900 font-medium">الصف الثاني</span>
-                                    
-                                </span>
-                            </label>
-                            <label class="flex items-center space-x-3 space-x-reverse bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors">
-                                <input type="radio" name="level" value="3" class="form-radio h-5 w-5 text-blue-600">
-                                <span class="flex flex-col">
-                                    <span class="text-gray-900 font-medium">الصف الثالث</span>
-                                    
-                                </span>
-                            </label>
-                            <label class="flex items-center space-x-3 space-x-reverse bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors">
-                                <input type="radio" name="level" value="4" class="form-radio h-5 w-5 text-blue-600">
-                                <span class="flex flex-col">
-                                    <span class="text-gray-900 font-medium">الصف الرابع</span>
-                                    
-                                </span>
-                            </label>
-                            <label class="flex items-center space-x-3 space-x-reverse bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors">
-                                <input type="radio" name="level" value="5" class="form-radio h-5 w-5 text-blue-600">
-                                <span class="flex flex-col">
-                                    <span class="text-gray-900 font-medium">الصف الخامس</span>
-                                </span>
-                            </label>
-                            <label class="flex items-center space-x-3 space-x-reverse bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors">
-                                <input type="radio" name="level" value="6" class="form-radio h-5 w-5 text-blue-600">
-                                <span class="flex flex-col">
-                                    <span class="text-gray-900 font-medium">الصف السادس</span>
-                                </span>
-                            </label>
-                        </div>
+                        <label class="grade-option">
+                            <input type="radio" name="level" value="3" class="hidden">
+                            <div class="grade-label text-center">
+                                <div class="text-3xl mb-2">3️⃣</div>
+                                <div class="font-bold">الصف الثالث</div>
+                            </div>
+                        </label>
+                        <label class="grade-option">
+                            <input type="radio" name="level" value="4" class="hidden">
+                            <div class="grade-label text-center">
+                                <div class="text-3xl mb-2">4️⃣</div>
+                                <div class="font-bold">الصف الرابع</div>
+                            </div>
+                        </label>
+                        <label class="grade-option">
+                            <input type="radio" name="level" value="5" class="hidden">
+                            <div class="grade-label text-center">
+                                <div class="text-3xl mb-2">5️⃣</div>
+                                <div class="font-bold">الصف الخامس</div>
+                            </div>
+                        </label>
+                        <label class="grade-option">
+                            <input type="radio" name="level" value="6" class="hidden">
+                            <div class="grade-label text-center">
+                                <div class="text-3xl mb-2">6️⃣</div>
+                                <div class="font-bold">الصف السادس</div>
+                            </div>
+                        </label>
                     </div>
-                    
-                    <!-- Submit button -->
-                    <button type="submit" class="w-full gradient-button text-white py-4 rounded-xl font-medium text-lg flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                        </svg>
-                        صياغة الأسئلة
+                </div>
+
+                <!-- Submit button -->
+                <div class="text-center">
+                    <button type="submit" class="cute-button px-12 py-4 text-xl font-bold">
+                        🚀 لنبدأ المغامرة! 🚀
                     </button>
-                </form>
-            </div>
-            
-            <!-- Footer -->
-            <div class="bg-gray-50 px-8 py-4 border-t border-gray-200">
-                <p class="text-center text-gray-500 text-sm">المساعد التعليمي الذكي - أداة لإنشاء أسئلة تعليمية فعالة</p>
-            </div>
+                </div>
+
+                <input type="hidden" name="input_type" value="text">
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-8">
+            <p class="text-white opacity-80 text-lg">✨ تعلم واستمتع مع صديقك الذكي! ✨</p>
         </div>
     </div>
-    
+
     <script>
-        // Toggle between text and file input
+        // Toggle functionality
         const textToggle = document.getElementById('text-toggle');
         const fileToggle = document.getElementById('file-toggle');
         const textInput = document.getElementById('text-input');
         const fileInput = document.getElementById('file-input');
-        const inputType = document.querySelector('input[name="input_type"]') || document.createElement('input');
-        inputType.type = 'hidden';
-        inputType.name = 'input_type';
-        document.querySelector('form').appendChild(inputType);
+        const inputTypeField = document.querySelector('input[name="input_type"]');
 
-        function setActive(toggle, otherToggle, input, otherInput, value) {
-            toggle.classList.add('active', 'bg-blue-600', 'text-white');
-            toggle.classList.remove('bg-gray-200', 'text-gray-700');
-            otherToggle.classList.add('bg-gray-200', 'text-gray-700');
-            otherToggle.classList.remove('active', 'bg-blue-600', 'text-white');
-            input.classList.remove('hidden');
-            otherInput.classList.add('hidden');
-            inputType.value = value;
+        function switchToText() {
+            textToggle.classList.add('bg-purple-100', 'text-purple-600');
+            textToggle.classList.remove('text-gray-600');
+            fileToggle.classList.add('text-gray-600');
+            fileToggle.classList.remove('bg-purple-100', 'text-purple-600');
+            textInput.classList.remove('hidden');
+            fileInput.classList.add('hidden');
+            inputTypeField.value = 'text';
         }
 
-        textToggle.addEventListener('click', () => setActive(textToggle, fileToggle, textInput, fileInput, 'text'));
-        fileToggle.addEventListener('click', () => setActive(fileToggle, textToggle, fileInput, textInput, 'file'));
+        function switchToFile() {
+            fileToggle.classList.add('bg-purple-100', 'text-purple-600');
+            fileToggle.classList.remove('text-gray-600');
+            textToggle.classList.add('text-gray-600');
+            textToggle.classList.remove('bg-purple-100', 'text-purple-600');
+            fileInput.classList.remove('hidden');
+            textInput.classList.add('hidden');
+            inputTypeField.value = 'file';
+        }
 
-        // Initialize with text input active
-        setActive(textToggle, fileToggle, textInput, fileInput, 'text');
-        
-        // Sync range and number inputs
+        textToggle.addEventListener('click', switchToText);
+        fileToggle.addEventListener('click', switchToFile);
+
+        // Range input sync
         const rangeInput = document.getElementById('num_questions_range');
-        const numberInput = document.getElementById('num_questions');
-        
+        const display = document.getElementById('questions-display');
+
         rangeInput.addEventListener('input', function() {
-            numberInput.value = this.value;
+            display.textContent = this.value;
         });
-        
-        numberInput.addEventListener('input', function() {
-            rangeInput.value = this.value;
+
+        // Grade selection
+        document.querySelectorAll('input[name="level"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.grade-option').forEach(option => {
+                    option.classList.remove('border-yellow-400');
+                    option.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                });
+                this.closest('.grade-option').classList.add('border-yellow-400');
+                this.closest('.grade-option').style.background = 'linear-gradient(135deg, #ffd700 0%, #ffb347 100%)';
+            });
         });
-        
-        // Show filename when selected
-        document.getElementById('file').addEventListener('change', function() {
-            const fileNameElement = document.getElementById('file-name');
-            if (this.files.length > 0) {
-                fileNameElement.textContent = `تم اختيار: ${this.files[0].name}`;
-                fileNameElement.classList.remove('hidden');
-            } else {
-                fileNameElement.classList.add('hidden');
-            }
-        });
+
+        // Initialize first grade as selected
+        document.querySelector('input[name="level"][value="1"]').closest('.grade-option').style.background = 'linear-gradient(135deg, #ffd700 0%, #ffb347 100%)';
     </script>
 </body>
 </html>

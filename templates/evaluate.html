@@ -7,180 +7,424 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
-        body { direction: rtl; font-family: 'Tajawal', sans-serif; background-color: #f7fafc; }
-        .gradient-button { background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%); transition: all 0.3s ease; }
-        .gradient-button:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3); }
-        .spinner { border-top-color: #ffffff; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        body {
+            direction: rtl;
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            min-height: 100vh;
+        }
+
+        /* Animated character styles */
+        .character {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            animation: bounce 2s infinite;
+        }
+
+        .character-body {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 50%;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .character-face {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .eye {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            position: relative;
+            display: inline-block;
+            margin: 0 3px;
+        }
+
+        .eye::after {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #333;
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            animation: blink 3s infinite;
+        }
+
+        .mouth {
+            width: 20px;
+            height: 12px;
+            border: 3px solid white;
+            border-top: none;
+            border-radius: 0 0 20px 20px;
+            margin: 8px auto 0;
+        }
+
+        .character-arms {
+            position: absolute;
+            top: 30px;
+            width: 100%;
+        }
+
+        .arm {
+            width: 30px;
+            height: 6px;
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 10px;
+            position: absolute;
+            animation: wave 2s infinite ease-in-out;
+        }
+
+        .arm-left {
+            left: -15px;
+            transform-origin: right center;
+        }
+
+        .arm-right {
+            right: -15px;
+            transform-origin: left center;
+            animation-delay: 0.5s;
+        }
+
+        .sparkles {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .sparkle {
+            width: 8px;
+            height: 8px;
+            background: #ffd700;
+            position: absolute;
+            border-radius: 50%;
+            animation: sparkle 1.5s infinite;
+        }
+
+        .sparkle:nth-child(1) { left: 0; animation-delay: 0s; }
+        .sparkle:nth-child(2) { left: 15px; animation-delay: 0.3s; }
+        .sparkle:nth-child(3) { left: 30px; animation-delay: 0.6s; }
+
+        /* Animations */
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        @keyframes blink {
+            0%, 90%, 100% { transform: scaleY(1); }
+            95% { transform: scaleY(0.1); }
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(20deg); }
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Card styles */
+        .cute-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .cute-button {
+            background: linear-gradient(45deg, #ff6b6b, #ffa726);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .cute-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .cute-input {
+            border: 3px solid #e1f5fe;
+            border-radius: 20px;
+            padding: 15px 20px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .cute-input:focus {
+            border-color: #4facfe;
+            outline: none;
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(79, 172, 254, 0.2);
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .floating-shape {
+            position: absolute;
+            opacity: 0.6;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shape-1 {
+            top: 10%;
+            left: 10%;
+            width: 50px;
+            height: 50px;
+            background: #ff9a9e;
+            border-radius: 50%;
+            animation-delay: 0s;
+        }
+
+        .shape-2 {
+            top: 20%;
+            right: 15%;
+            width: 30px;
+            height: 30px;
+            background: #a8edea;
+            transform: rotate(45deg);
+            animation-delay: 1s;
+        }
+
+        .shape-3 {
+            bottom: 20%;
+            left: 20%;
+            width: 40px;
+            height: 40px;
+            background: #ffd89b;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            animation-delay: 2s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-20px) rotate(120deg); }
+            66% { transform: translateY(10px) rotate(240deg); }
+        }
+
+        .spinner {
+            border-top-color: #ffffff;
+            animation: spin 1s linear infinite;
+        }
     </style>
 </head>
-<body class="min-h-screen py-12 px-4">
-<div class="container max-w-4xl mx-auto">
-    <div class="text-center mb-10">
-        <h1 class="text-4xl font-extrabold text-gray-800 mb-2">📝 جلسة تقييم</h1>
-        <p class="text-lg text-gray-500">اقرأ النص وأجب عن الأسئلة التالية.</p>
+<body>
+    <!-- Floating background elements -->
+    <div class="floating-elements">
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        <div class="floating-shape shape-3"></div>
     </div>
 
-    <!-- **************************************** -->
-    <!-- ***      NEW SECTION TO DISPLAY      *** -->
-    <!-- ***      THE ORIGINAL CONTENT        *** -->
-    <!-- **************************************** -->
-    {% if question_set.content %}
-    <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">النص المرجعي</h2>
-        <div class="bg-gray-100 p-4 rounded-lg max-h-72 overflow-y-auto border">
-            <!-- 'whitespace-pre-wrap' preserves line breaks and spacing from the original text -->
-            <p class="text-gray-700 whitespace-pre-wrap">{{ question_set.content }}</p>
-        </div>
-    </div>
-    {% endif %}
-    <!-- **************************************** -->
-    <!-- ***        END OF NEW SECTION        *** -->
-    <!-- **************************************** -->
-
-    <!-- This form wraps everything and will submit all results at the end -->
-    <form id="evaluation-form" action="{{ url_for('save_evaluation') }}" method="POST">
-        <!-- Hidden input to store the original question set ID from the database -->
-        <input type="hidden" name="question_set_id" value="{{ question_set._id }}">
-        <!-- Hidden input to store all evaluation results as a JSON string -->
-        <input type="hidden" name="evaluation_data" id="evaluation_data_input">
-
-        <div class="space-y-8" id="questions-container">
-            {% for qa_pair in question_set.questions %}
-            <div class="question-card bg-white rounded-2xl shadow-lg overflow-hidden" data-index="{{ loop.index0 }}">
-                <div class="bg-gray-50 p-6 border-b">
-                    <h3 class="text-xl font-semibold text-gray-800">
-                        <span class="text-blue-600">سؤال {{ loop.index }}:</span> {{ qa_pair.question }}
-                    </h3>
-                    <!-- Store the model answer in a data attribute for easy access in JavaScript -->
-                    <span class="model-answer" style="display: none;" data-answer="{{ qa_pair.answer }}"></span>
+    <div class="container max-w-4xl mx-auto py-8 px-4">
+        <!-- Header with animated character -->
+        <div class="text-center mb-8">
+            <div class="character mx-auto mb-6">
+                <div class="sparkles">
+                    <div class="sparkle"></div>
+                    <div class="sparkle"></div>
+                    <div class="sparkle"></div>
                 </div>
-                
-                <div class="p-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">أدخل إجابتك:</label>
-                    <textarea rows="4" placeholder="اكتب إجابتك هنا..."
-                              class="student-answer w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
-                    
-                    <div class="mt-4">
-                        <button type="button" onclick="evaluateSingleAnswer(this)"
-                                class="evaluate-btn gradient-button py-2 px-5 rounded-lg font-medium text-white flex items-center justify-center space-x-2 space-x-reverse">
-                            <span>تقييم الإجابة</span>
-                        </button>
+                <div class="character-body">
+                    <div class="character-arms">
+                        <div class="arm arm-left"></div>
+                        <div class="arm arm-right"></div>
+                    </div>
+                    <div class="character-face">
+                        <div class="eye"></div>
+                        <div class="eye"></div>
+                        <div class="mouth"></div>
                     </div>
                 </div>
-
-                <!-- The evaluation results will be dynamically injected here by JavaScript -->
-                <div class="evaluation-result hidden p-6 border-t border-gray-100"></div>
             </div>
-            {% endfor %}
+            <h1 class="text-4xl font-bold text-white mb-2" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                🌟 جلسة تقييم 🌟
+            </h1>
+            <p class="text-xl text-white opacity-90">اقرأ النص وأجب عن الأسئلة مع صديقك الذكي!</p>
         </div>
 
-        <div class="mt-12 text-center">
-            <button type="submit" id="save-all-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-lg shadow-xl transition-all disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
-                حفظ كل التقييمات
-            </button>
-            <p class="text-sm text-gray-500 mt-2" id="save-hint">يجب تقييم كل الإجابات أولاً لتتمكن من الحفظ.</p>
+        <!-- Main content card -->
+        <div class="cute-card p-8">
+            <!-- Original Content Section -->
+            {% if question_set.content %}
+            <div class="space-y-4 mb-8">
+                <h2 class="text-xl font-bold text-purple-700 text-center">📜 النص المرجعي</h2>
+                <div class="cute-input p-4 rounded-lg max-h-72 overflow-y-auto">
+                    <p class="text-gray-700 whitespace-pre-wrap">{{ question_set.content }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Form for evaluation -->
+            <form id="evaluation-form" action="{{ url_for('save_evaluation') }}" method="POST">
+                <input type="hidden" name="question_set_id" value="{{ question_set._id }}">
+                <input type="hidden" name="evaluation_data" id="evaluation_data_input">
+
+                <div class="space-y-8" id="questions-container">
+                    {% for qa_pair in question_set.questions %}
+                    <div class="question-card cute-card" data-index="{{ loop.index0 }}">
+                        <div class="p-6 border-b bg-gradient-to-r from-blue-50 to-purple-50">
+                            <h3 class="text-xl font-bold text-purple-700">
+                                <span class="text-purple-600">سؤال {{ loop.index }} ✨:</span> {{ qa_pair.question }}
+                            </h3>
+                            <span class="model-answer" style="display: none;" data-answer="{{ qa_pair.answer }}"></span>
+                        </div>
+                        <div class="p-6">
+                            <label class="block text-lg font-bold text-purple-700 mb-2">أدخل إجابتك:</label>
+                            <textarea rows="4" placeholder="اكتب إجابتك هنا..." 
+                                      class="student-answer w-full cute-input"></textarea>
+                            <div class="mt-4">
+                                <button type="button" onclick="evaluateSingleAnswer(this)"
+                                        class="evaluate-btn cute-button py-2 px-6 text-lg font-bold flex items-center justify-center space-x-2 space-x-reverse"
+                                        aria-label="تقييم إجابة السؤال {{ loop.index }}">
+                                    <span>تقييم الإجابة 🚀</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="evaluation-result hidden p-6 border-t border-purple-100"></div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mt-12 text-center">
+                    <button type="submit" id="save-all-btn" 
+                            class="cute-button py-3 px-8 text-lg font-bold disabled:bg-gray-400 disabled:cursor-not-allowed disabled:shadow-none" 
+                            disabled>
+                        حفظ كل التقييمات 🚀
+                    </button>
+                    <p class="text-sm text-gray-500 mt-2" id="save-hint">يجب تقييم كل الإجابات أولاً لتتمكن من الحفظ.</p>
+                </div>
+            </form>
         </div>
-    </form>
-</div>
 
-<script>
-    // This object will store all the evaluation data before final submission
-    const evaluationResults = {};
+        <!-- Footer -->
+        <div class="text-center mt-8">
+            <p class="text-white opacity-80 text-lg">✨ استمتع بالتقييم مع صديقك الذكي! ✨</p>
+        </div>
+    </div>
 
-    async function evaluateSingleAnswer(button) {
-        const card = button.closest('.question-card');
-        const questionIndex = card.dataset.index;
-        const questionText = card.querySelector('h3').innerText.replace(/سؤال \d+: /, '');
-        const studentAnswer = card.querySelector('.student-answer').value;
-        const modelAnswer = card.querySelector('.model-answer').dataset.answer;
-        const resultDiv = card.querySelector('.evaluation-result');
+    <script>
+        const evaluationResults = {};
 
-        if (!studentAnswer.trim()) {
-            alert('الرجاء إدخال إجابة.');
-            return;
-        }
+        async function evaluateSingleAnswer(button) {
+            const card = button.closest('.question-card');
+            const questionIndex = card.dataset.index;
+            const questionText = card.querySelector('h3').innerText.replace(/^سؤال \d+ ✨:\s*/, '');
+            const studentAnswer = card.querySelector('.student-answer').value;
+            const modelAnswer = card.querySelector('.model-answer').dataset.answer;
+            const resultDiv = card.querySelector('.evaluation-result');
 
-        // --- Update UI to show loading state ---
-        button.disabled = true;
-        button.innerHTML = '<div class="spinner w-5 h-5 border-2 rounded-full"></div><span>جاري التقييم...</span>';
-
-        try {
-            // --- Send data to the backend for local evaluation ---
-            const response = await fetch("{{ url_for('evaluate_answer') }}", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    student_answer: studentAnswer,
-                    model_answer: modelAnswer
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'فشل الاتصال بالخادم.');
+            if (!studentAnswer.trim()) {
+                alert('الرجاء إدخال إجابة.');
+                return;
             }
-            
-            const data = await response.json();
-            
-            // --- Store the result from the backend ---
-            evaluationResults[questionIndex] = {
-                question: questionText,
-                student_answer: studentAnswer,
-                model_answer: modelAnswer,
-                score: data.score,
-                feedback: data.feedback
-            };
 
-            // --- Display the result on the page ---
-            resultDiv.innerHTML = `
-                <div class="flex items-center justify-between mb-3">
-                    <h4 class="text-lg font-medium text-gray-800">نتيجة التقييم</h4>
-                    <span class="text-2xl font-bold ${data.score >= 7 ? 'text-green-600' : (data.score >= 4 ? 'text-yellow-600' : 'text-red-600')}">${data.score}/10</span>
-                </div>
-                <div class="bg-gray-100 p-4 rounded-lg">
-                    <p class="text-gray-800">${data.feedback}</p>
-                </div>
-            `;
-            resultDiv.classList.remove('hidden');
-            button.innerHTML = '<span>تم التقييم بنجاح</span>';
-            card.querySelector('.student-answer').disabled = true;
+            button.disabled = true;
+            button.innerHTML = '<div class="spinner w-5 h-5 border-2 rounded-full"></div><span>جاري التقييم...</span>';
 
-            // Check if all questions have been evaluated to enable the save button
-            checkAllEvaluated();
+            try {
+                const response = await fetch("{{ url_for('evaluate_answer') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        student_answer: studentAnswer,
+                        model_answer: modelAnswer,
+                        question: questionText
+                    })
+                });
 
-        } catch (error) {
-            resultDiv.innerHTML = `<p class="text-red-500">حدث خطأ: ${error.message}</p>`;
-            resultDiv.classList.remove('hidden');
-            button.disabled = false;
-            button.innerHTML = '<span>إعادة محاولة التقييم</span>';
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'فشل الاتصال بالخادم.');
+                }
+
+                const data = await response.json();
+
+                evaluationResults[questionIndex] = {
+                    question: questionText,
+                    student_answer: studentAnswer,
+                    model_answer: modelAnswer,
+                    score: data.score,
+                    feedback: data.feedback
+                };
+
+                resultDiv.innerHTML = `
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-lg font-bold text-purple-700">نتيجة التقييم</h4>
+                        <span class="text-2xl font-bold ${data.score >= 7 ? 'text-green-600' : (data.score >= 4 ? 'text-yellow-600' : 'text-red-600')}">${data.score}/10</span>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg">
+                        <p class="text-gray-800">${data.feedback}</p>
+                    </div>
+                `;
+                resultDiv.classList.remove('hidden');
+                button.innerHTML = '<span>تم التقييم بنجاح 🎉</span>';
+                card.querySelector('.student-answer').disabled = true;
+
+                checkAllEvaluated();
+            } catch (error) {
+                console.error('Error in evaluation:', error);
+                resultDiv.innerHTML = `<p class="text-red-500">حدث خطأ: ${error.message}</p>`;
+                resultDiv.classList.remove('hidden');
+                button.disabled = false;
+                button.innerHTML = '<span>إعادة محاولة التقييم</span>';
+            }
         }
-    }
 
-    // This function checks if all answer cards have been evaluated
-    function checkAllEvaluated() {
-        const totalQuestions = document.querySelectorAll('.question-card').length;
-        const evaluatedCount = Object.keys(evaluationResults).length;
-        const saveButton = document.getElementById('save-all-btn');
-        const saveHint = document.getElementById('save-hint');
+        function checkAllEvaluated() {
+            const totalQuestions = document.querySelectorAll('.question-card').length;
+            const evaluatedCount = Object.keys(evaluationResults).length;
+            const saveButton = document.getElementById('save-all-btn');
+            const saveHint = document.getElementById('save-hint');
 
-        if (totalQuestions === evaluatedCount) {
-            saveButton.disabled = false;
-            saveHint.classList.add('hidden');
+            if (totalQuestions === evaluatedCount) {
+                saveButton.disabled = false;
+                saveHint.classList.add('hidden');
+            }
         }
-    }
 
-    // This function runs just before the form is submitted
-    document.getElementById('evaluation-form').addEventListener('submit', function(e) {
-        const evaluatedCount = Object.keys(evaluationResults).length;
-        if(evaluatedCount === 0) {
-            e.preventDefault();
-            alert("الرجاء تقييم إجابة واحدة على الأقل قبل الحفظ.");
-            return;
-        }
-        const dataInput = document.getElementById('evaluation_data_input');
-        dataInput.value = JSON.stringify(Object.values(evaluationResults));
-    });
-</script>
+        document.getElementById('evaluation-form').addEventListener('submit', function(e) {
+            const evaluatedCount = Object.keys(evaluationResults).length;
+            const totalQuestions = document.querySelectorAll('.question-card').length;
+            if (evaluatedCount < totalQuestions) {
+                e.preventDefault();
+                alert("الرجاء تقييم جميع الأسئلة قبل الحفظ.");
+                return;
+            }
+            const dataInput = document.getElementById('evaluation_data_input');
+            dataInput.value = JSON.stringify(Object.values(evaluationResults));
+        });
+    </script>
 </body>
 </html>
