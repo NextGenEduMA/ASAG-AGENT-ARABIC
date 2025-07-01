@@ -3,442 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الأسئلة المولدة</title>
+    <title>الأسئلة المحفوظة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            direction: rtl;
-            font-family: 'Tajawal', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
-        }
-        .gradient-button {
-            background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
-            transition: all 0.3s ease;
-        }
-        .gradient-button:hover {
-            background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
-        }
-        .question-card {
-            transition: all 0.3s ease;
-        }
-        .question-card:hover {
-            transform: translateY(-3px);
-        }
-        .animated-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: -1;
-            overflow: hidden;
-        }
-        .animated-bg::before {
-            content: '';
-            position: absolute;
-            top: -10%;
-            left: -10%;
-            width: 120%;
-            height: 120%;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 25%, transparent 50%);
-            animation: pulse 15s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.5; }
-            50% { transform: scale(1.05); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 0.5; }
-        }
-        .floating {
-            animation: floating 3s ease-in-out infinite;
-        }
-        @keyframes floating {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-        .input-focus {
-            transition: all 0.3s ease;
-        }
-        .input-focus:focus {
-            transform: scale(1.01);
-        }
-        .progress-bar-animation {
-            animation: progress 0.8s ease-in-out;
-        }
-        @keyframes progress {
-            0% { width: 0%; }
-            100% { width: 100%; }
-        }
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background-color: #3b82f6;
-            opacity: 0;
-            animation: confetti-fall 3s ease-in-out forwards;
-        }
-        @keyframes confetti-fall {
-            0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100px) rotate(360deg); opacity: 0; }
-        }
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-        .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-        .score-indicator {
-            transition: all 0.5s ease;
-        }
-        .score-animation {
-            animation: score-pulse 2s ease-in-out;
-        }
-        @keyframes score-pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
+        body { direction: rtl; font-family: 'Tajawal', sans-serif; background-color: #f7fafc; }
+        .gradient-button { background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%); transition: all 0.3s ease; }
+        .gradient-button:hover { transform: translateY(-1px); }
     </style>
 </head>
-<body class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
-    <div class="animated-bg"></div>
-    
+<body class="min-h-screen py-12 px-4">
     <div class="container max-w-4xl mx-auto">
-        <!-- Header section -->
-        <div class="bg-gradient-to-l from-blue-600 to-indigo-700 rounded-3xl shadow-lg text-white p-8 mb-8 relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-full opacity-10">
-                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                    <path fill="white" d="M11.1,-19.3C14.9,-16.7,18.8,-14.6,21.3,-11.3C23.9,-8,25,-3.4,24.6,1C24.2,5.3,22.3,9.4,19.3,12.7C16.3,16.1,12.1,18.7,7.7,19.1C3.2,19.5,-1.4,17.8,-5.8,16.2C-10.1,14.6,-14.1,13.1,-18.3,10.2C-22.5,7.3,-26.8,3.1,-26.8,-1C-26.9,-5.1,-22.7,-9.1,-18.6,-11.9C-14.6,-14.7,-10.8,-16.3,-7.3,-19.1C-3.9,-21.9,-1.9,-26,1.2,-28C4.4,-30,8.7,-29.9,11.1,-19.3Z" transform="translate(50 50)" />
-                </svg>
-            </div>
-            
-            <h1 class="text-4xl font-bold text-center mb-2 relative z-10 floating">الأسئلة المولدة</h1>
-            <input type="hidden" id="session-id" value="{{ session_id }}">
-            {% if level %}
-                <div class="flex items-center justify-center space-x-4 space-x-reverse relative z-10">
-                    <div class="bg-white bg-opacity-20 px-4 py-2 rounded-lg">
-                        <p class="text-blue-100">مستوى الأسئلة:</p>
-                        <p class="font-bold">{{ {
-                            1: "الصف الأول (سهلة جدًا)",
-                            2: "الصف الثاني (سهلة)",
-                            3: "الصف الثالث (سهلة مع تحليل)",
-                            4: "الصف الرابع (سهلة مع تفكير)",
-                            5: "الصف الخامس (متوسطة)",
-                            6: "الصف السادس (متوسطة مع استنتاج)"
-                        }[level] }}</p>
+        
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-extrabold text-gray-800 mb-2">📚 بنك الأسئلة المحفوظة</h1>
+            <p class="text-lg text-gray-500">اختر مجموعة لبدء جلسة تقييم.</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="{% if category == 'error' %}bg-red-100 border-red-400 text-red-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} border-l-4 p-4 mb-6 rounded-md" role="alert">
+                        <p class="font-bold">{{ message }}</p>
                     </div>
-                    <div class="bg-white bg-opacity-20 px-4 py-2 rounded-lg">
-                        <p class="text-blue-100">عدد الأسئلة:</p>
-                        <p class="font-bold">{{ questions|length }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="space-y-8">
+            {% if question_sets %}
+                {% for q_set in question_sets %}
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+                        <div class="p-6 border-b bg-gray-50 flex justify-between items-center">
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800">مجموعة أسئلة</h2>
+                                <p class="text-sm text-gray-500">
+                                    تم الحفظ بتاريخ: {{ q_set.timestamp | strftime if q_set.timestamp else 'N/A' }}
+                                    <span class="mx-2">|</span>
+                                    عدد الأسئلة: {{ q_set.questions | length }}
+                                </p>
+                            </div>
+                            
+                            <!-- **************************************** -->
+                            <!-- *** THIS IS THE BUTTON YOU NEED TO ADD *** -->
+                            <!-- **************************************** -->
+                            <div>
+                                <a href="{{ url_for('evaluate_set', set_id=q_set._id) }}" 
+                                   class="gradient-button text-white font-bold py-2 px-5 rounded-lg shadow-md hover:shadow-lg transition-all">
+                                    بدء التقييم
+                                </a>
+                            </div>
+                            
+                        </div>
+                        
+                        <div class="p-6">
+                            <ul class="space-y-4">
+                                {% for qa in q_set.questions %}
+                                    <li class="border-b pb-3 last:border-b-0">
+                                        <p class="font-semibold text-gray-700">
+                                            <span class="text-blue-600">سؤال {{ loop.index }}:</span> {{ qa.question }}
+                                        </p>
+                                        <p class="text-sm text-gray-600 pl-6">
+                                            <strong class="text-green-600">جواب:</strong> {{ qa.answer }}
+                                        </p>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
                     </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center bg-white rounded-lg shadow-md p-10">
+                    <h3 class="text-xl font-semibold text-gray-700">لم يتم حفظ أي أسئلة بعد.</h3>
+                    <p class="text-gray-500 mt-2">ابدأ بإنشاء مجموعتك الأولى!</p>
                 </div>
             {% endif %}
-            
-            <!-- Decorative elements -->
-            <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-white bg-opacity-10 rounded-full"></div>
-            <div class="absolute right-20 top-10 w-10 h-10 bg-white bg-opacity-10 rounded-full"></div>
         </div>
-        
-        <!-- Questions section -->
-        <div class="space-y-8" id="questions-container">
-            {% for question in questions %}
-                <div class="question-card bg-white rounded-2xl shadow-lg overflow-hidden card-hover" data-question-index="{{ loop.index0 }}">
-                    <!-- Question header -->
-                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-100">
-                        <div class="flex items-start">
-                            <div class="bg-blue-600 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold ml-3 flex-shrink-0">
-                                {{ loop.index }}
-                            </div>
-                            <h3 class="text-xl font-semibold text-gray-800">{{ question.question }}</h3>
-                        </div>
-                    </div>
-                    
-                    <!-- Answer section -->
-                    <div class="p-6">
-                        <label for="answer-{{ loop.index0 }}" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H6z" clip-rule="evenodd" />
-                            </svg>
-                            أدخل إجابتك:
-                        </label>
-                        <textarea id="answer-{{ loop.index0 }}" rows="5" placeholder="أدخل إجابتك هنا..." class="student-answer w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-focus" data-index="{{ loop.index0 }}"></textarea>
-                        
-                        <div class="mt-4 flex items-center">
-                            <button onclick="evaluateAnswer({{ loop.index0 }})" class="gradient-button py-3 px-6 rounded-xl font-medium text-white flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                </svg>
-                                تقييم الإجابة
-                            </button>
-                            <div class="evaluation-status hidden mr-4 text-gray-500 items-center">
-                                <svg class="animate-spin h-5 w-5 text-blue-500 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                جاري التقييم...
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Evaluation results (initially hidden) -->
-                    <div class="evaluation hidden border-t border-gray-100" id="evaluation-{{ loop.index0 }}">
-                        <div class="p-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <h4 class="text-lg font-medium text-gray-800 flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    نتيجة التقييم
-                                </h4>
-                                <div class="score-badge flex items-center">
-                                    <div class="score-indicator bg-blue-100 h-8 w-8 rounded-full flex items-center justify-center">
-                                        <span class="score font-bold text-blue-600">-</span>
-                                    </div>
-                                    <span class="text-gray-500 mr-2">/10</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Progress bar for score visualization -->
-                            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
-                                <div class="score-bar bg-blue-600 h-2.5 rounded-full progress-bar-animation" style="width: 0%"></div>
-                            </div>
-                            
-                            <div class="space-y-4">
-                                <!-- Feedback -->
-                                <div class="bg-blue-50 rounded-xl p-4">
-                                    <p class="text-gray-700 flex items-start">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 ml-2 mt-1 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                                        </svg>
-                                        <span class="feedback">-</span>
-                                    </p>
-                                </div>
-                                
-                                <!-- Detailed feedback -->
-                                <div>
-                                    <h5 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                                        </svg>
-                                        تفاصيل التقييم:
-                                    </h5>
-                                    <p class="text-gray-600 text-sm detailed_feedback bg-gray-50 p-3 rounded-lg">-</p>
-                                </div>
-                                
-                                <!-- Model answer section -->
-                                <div class="mt-6">
-                                    <button class="toggle-model-answer flex items-center text-blue-600 hover:text-blue-800">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                        </svg>
-                                        عرض الإجابة النموذجية
-                                    </button>
-                                    <div class="model-answer hidden mt-3 p-4 bg-green-50 rounded-xl border border-green-100">
-                                        <p class="text-gray-700"><strong class="text-green-600">الإجابة النموذجية:</strong> {{ question.answer }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-        
-        <!-- Back to home button -->
-        <div class="mt-10 text-center">
-            <a href="{{ url_for('index') }}" class="inline-block">
-                <button class="bg-gray-600 hover:bg-gray-700 text-white py-3 px-8 rounded-xl font-medium transition-all flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-                    </svg>
-                    العودة إلى الصفحة الرئيسية
-                </button>
+
+        <div class="mt-12 text-center">
+            <a href="{{ url_for('index') }}" class="inline-block bg-gray-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-gray-800 transition-colors">
+                العودة وإنشاء أسئلة جديدة
             </a>
         </div>
     </div>
-    
-    <script>
-        function evaluateAnswer(questionIndex) {
-            const studentAnswer = document.getElementById(`answer-${questionIndex}`).value;
-            const sessionId = document.getElementById('session-id').value;
-            const questionCard = document.querySelector(`[data-question-index="${questionIndex}"]`);
-            const evaluationStatus = questionCard.querySelector('.evaluation-status');
-            const button = event.target.closest('button');
-            
-            console.log(`Evaluating answer for question ${questionIndex}, session ${sessionId}`);
-            
-            if (!studentAnswer || studentAnswer.trim().length < 6) {
-                // Create error toast
-                const toast = document.createElement('div');
-                toast.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 flex items-center';
-                toast.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                    </svg>
-                    الرجاء إدخال إجابة أطول
-                `;
-                document.body.appendChild(toast);
-                setTimeout(() => {
-                    toast.remove();
-                }, 3000);
-                return;
-            }
-            
-            // Show loading state
-            button.disabled = true;
-            evaluationStatus.classList.remove('hidden');
-            evaluationStatus.classList.add('flex');
-            
-            fetch('/evaluate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    'session_id': sessionId,
-                    'question_index': questionIndex,
-                    'student_answer': studentAnswer
-                })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.error || 'حدث خطأ أثناء تقييم الإجابة');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Hide loading state
-                button.disabled = false;
-                evaluationStatus.classList.add('hidden');
-                evaluationStatus.classList.remove('flex');
-                
-                // Show the evaluation section
-                const evaluationDiv = document.getElementById(`evaluation-${questionIndex}`);
-                evaluationDiv.classList.remove('hidden');
-                
-                // Update the score and feedback
-                const scoreElement = evaluationDiv.querySelector('.score');
-                const scoreBar = evaluationDiv.querySelector('.score-bar');
-                const scoreIndicator = evaluationDiv.querySelector('.score-indicator');
-                
-                scoreElement.textContent = `${data.score}`;
-                evaluationDiv.querySelector('.feedback').textContent = data.feedback;
-                evaluationDiv.querySelector('.detailed_feedback').textContent = data.detailed_feedback.replace(/\n/g, ' ');
-                
-                // Update the score bar width based on the score
-                const scorePercentage = (data.score / 10) * 100;
-                scoreBar.style.width = `${scorePercentage}%`;
-                
-                // Update score indicator color based on score
-                scoreIndicator.classList.remove('bg-blue-100', 'bg-green-100', 'bg-yellow-100', 'bg-red-100');
-                scoreIndicator.querySelector('.score').classList.remove('text-blue-600', 'text-green-600', 'text-yellow-600', 'text-red-600');
-                
-                if (data.score >= 8) {
-                    scoreIndicator.classList.add('bg-green-100');
-                    scoreIndicator.querySelector('.score').classList.add('text-green-600');
-                    
-                    // Add confetti effect for high scores
-                    createConfetti(questionCard);
-                } else if (data.score >= 6) {
-                    scoreIndicator.classList.add('bg-blue-100');
-                    scoreIndicator.querySelector('.score').classList.add('text-blue-600');
-                } else if (data.score >= 4) {
-                    scoreIndicator.classList.add('bg-yellow-100');
-                    scoreIndicator.querySelector('.score').classList.add('text-yellow-600');
-                } else {
-                    scoreIndicator.classList.add('bg-red-100');
-                    scoreIndicator.querySelector('.score').classList.add('text-red-600');
-                }
-                
-                // Add animation to score
-                scoreIndicator.classList.add('score-animation');
-                setTimeout(() => {
-                    scoreIndicator.classList.remove('score-animation');
-                }, 2000);
-                
-                // Scroll to the evaluation
-                evaluationDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                
-                // Hide loading state
-                button.disabled = false;
-                evaluationStatus.classList.add('hidden');
-                evaluationStatus.classList.remove('flex');
-                
-                // Show error toast
-                const toast = document.createElement('div');
-                toast.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 flex items-center';
-                toast.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414-1.414z" clip-rule="evenodd" />
-                    </svg>
-                    ${error.message}
-                `;
-                document.body.appendChild(toast);
-                setTimeout(() => {
-                    toast.remove();
-                }, 3000);
-            });
-        }
-        
-        // Function to create confetti effect
-        function createConfetti(container) {
-            const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b'];
-            
-            for (let i = 0; i < 50; i++) {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti';
-                confetti.style.left = `${Math.random() * 100}%`;
-                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
-                confetti.style.animationDelay = `${Math.random() * 0.5}s`;
-                container.appendChild(confetti);
-                
-                // Remove confetti after animation
-                setTimeout(() => {
-                    confetti.remove();
-                }, 5000);
-            }
-        }
-        
-        // Toggle model answer visibility
-        document.addEventListener('DOMContentLoaded', function() {
-            const toggleButtons = document.querySelectorAll('.toggle-model-answer');
-            
-            toggleButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const modelAnswer = this.nextElementSibling;
-                    const isHidden = modelAnswer.classList.contains('hidden');
-                    
-                    modelAnswer.classList.toggle('hidden');
-                    
-                    // Update button text and icon
-                    if (isHidden) {
-                        this.innerHTML = `
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="14.707 12.707a1 1 0 01-1.414 0L-1 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4 4a1 1 0 4-4a4 1 0 0 0-0l4 4a1 0 0 0 0 0z1 a1 414z" clip-rule="evenodd" />
-                            </svg>
-                            إخفاء الإجابة النموذجية
-                        `;
-                    } else {
-                        this.innerHTML = `
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="5.293 7.293a1 1 0 0 1.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4-4a1 1 0 01-1.414 0l-4-4a1 0 0 1 0-1.414z1" clip-rule="evenodd" />
-                            </svg>
-                            عرض الإجابة النموذجية
-                        `;
-                    }
-                });
-            });
-        });
-    </script>
 </body>
 </html>

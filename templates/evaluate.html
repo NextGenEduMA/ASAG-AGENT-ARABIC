@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقييم الإجابات</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { direction: rtl; font-family: 'Tajawal', sans-serif; background-color: #f7fafc; }
+        .gradient-button { background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%); transition: all 0.3s ease; }
+        .gradient-button:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3); }
+        .spinner { border-top-color: #ffffff; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="min-h-screen py-12 px-4">
+<div class="container max-w-4xl mx-auto">
+    <div class="text-center mb-10">
+        <h1 class="text-4xl font-extrabold text-gray-800 mb-2">📝 جلسة تقييم</h1>
+        <p class="text-lg text-gray-500">اقرأ النص وأجب عن الأسئلة التالية.</p>
+    </div>
+
+    <!-- **************************************** -->
+    <!-- ***      NEW SECTION TO DISPLAY      *** -->
+    <!-- ***      THE ORIGINAL CONTENT        *** -->
+    <!-- **************************************** -->
+    {% if question_set.content %}
+    <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">النص المرجعي</h2>
+        <div class="bg-gray-100 p-4 rounded-lg max-h-72 overflow-y-auto border">
+            <!-- 'whitespace-pre-wrap' preserves line breaks and spacing from the original text -->
+            <p class="text-gray-700 whitespace-pre-wrap">{{ question_set.content }}</p>
+        </div>
+    </div>
+    {% endif %}
+    <!-- **************************************** -->
+    <!-- ***        END OF NEW SECTION        *** -->
+    <!-- **************************************** -->
+
+    <!-- This form wraps everything and will submit all results at the end -->
+    <form id="evaluation-form" action="{{ url_for('save_evaluation') }}" method="POST">
+        <!-- Hidden input to store the original question set ID from the database -->
+        <input type="hidden" name="question_set_id" value="{{ question_set._id }}">
+        <!-- Hidden input to store all evaluation results as a JSON string -->
+        <input type="hidden" name="evaluation_data" id="evaluation_data_input">
+
+        <div class="space-y-8" id="questions-container">
+            {% for qa_pair in question_set.questions %}
+            <div class="question-card bg-white rounded-2xl shadow-lg overflow-hidden" data-index="{{ loop.index0 }}">
+                <div class="bg-gray-50 p-6 border-b">
+                    <h3 class="text-xl font-semibold text-gray-800">
+                        <span class="text-blue-600">سؤال {{ loop.index }}:</span> {{ qa_pair.question }}
+                    </h3>
+                    <!-- Store the model answer in a data attribute for easy access in JavaScript -->
+                    <span class="model-answer" style="display: none;" data-answer="{{ qa_pair.answer }}"></span>
+                </div>
+                
+                <div class="p-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">أدخل إجابتك:</label>
+                    <textarea rows="4" placeholder="اكتب إجابتك هنا..."
+                              class="student-answer w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                    
+                    <div class="mt-4">
+                        <button type="button" onclick="evaluateSingleAnswer(this)"
+                                class="evaluate-btn gradient-button py-2 px-5 rounded-lg font-medium text-white flex items-center justify-center space-x-2 space-x-reverse">
+                            <span>تقييم الإجابة</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- The evaluation results will be dynamically injected here by JavaScript -->
+                <div class="evaluation-result hidden p-6 border-t border-gray-100"></div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-12 text-center">
+            <button type="submit" id="save-all-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-lg shadow-xl transition-all disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                حفظ كل التقييمات
+            </button>
+            <p class="text-sm text-gray-500 mt-2" id="save-hint">يجب تقييم كل الإجابات أولاً لتتمكن من الحفظ.</p>
+        </div>
+    </form>
+</div>
+
+<script>
+    // This object will store all the evaluation data before final submission
+    const evaluationResults = {};
+
+    async function evaluateSingleAnswer(button) {
+        const card = button.closest('.question-card');
+        const questionIndex = card.dataset.index;
+        const questionText = card.querySelector('h3').innerText.replace(/سؤال \d+: /, '');
+        const studentAnswer = card.querySelector('.student-answer').value;
+        const modelAnswer = card.querySelector('.model-answer').dataset.answer;
+        const resultDiv = card.querySelector('.evaluation-result');
+
+        if (!studentAnswer.trim()) {
+            alert('الرجاء إدخال إجابة.');
+            return;
+        }
+
+        // --- Update UI to show loading state ---
+        button.disabled = true;
+        button.innerHTML = '<div class="spinner w-5 h-5 border-2 rounded-full"></div><span>جاري التقييم...</span>';
+
+        try {
+            // --- Send data to the backend for local evaluation ---
+            const response = await fetch("{{ url_for('evaluate_answer') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    student_answer: studentAnswer,
+                    model_answer: modelAnswer
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'فشل الاتصال بالخادم.');
+            }
+            
+            const data = await response.json();
+            
+            // --- Store the result from the backend ---
+            evaluationResults[questionIndex] = {
+                question: questionText,
+                student_answer: studentAnswer,
+                model_answer: modelAnswer,
+                score: data.score,
+                feedback: data.feedback
+            };
+
+            // --- Display the result on the page ---
+            resultDiv.innerHTML = `
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-lg font-medium text-gray-800">نتيجة التقييم</h4>
+                    <span class="text-2xl font-bold ${data.score >= 7 ? 'text-green-600' : (data.score >= 4 ? 'text-yellow-600' : 'text-red-600')}">${data.score}/10</span>
+                </div>
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <p class="text-gray-800">${data.feedback}</p>
+                </div>
+            `;
+            resultDiv.classList.remove('hidden');
+            button.innerHTML = '<span>تم التقييم بنجاح</span>';
+            card.querySelector('.student-answer').disabled = true;
+
+            // Check if all questions have been evaluated to enable the save button
+            checkAllEvaluated();
+
+        } catch (error) {
+            resultDiv.innerHTML = `<p class="text-red-500">حدث خطأ: ${error.message}</p>`;
+            resultDiv.classList.remove('hidden');
+            button.disabled = false;
+            button.innerHTML = '<span>إعادة محاولة التقييم</span>';
+        }
+    }
+
+    // This function checks if all answer cards have been evaluated
+    function checkAllEvaluated() {
+        const totalQuestions = document.querySelectorAll('.question-card').length;
+        const evaluatedCount = Object.keys(evaluationResults).length;
+        const saveButton = document.getElementById('save-all-btn');
+        const saveHint = document.getElementById('save-hint');
+
+        if (totalQuestions === evaluatedCount) {
+            saveButton.disabled = false;
+            saveHint.classList.add('hidden');
+        }
+    }
+
+    // This function runs just before the form is submitted
+    document.getElementById('evaluation-form').addEventListener('submit', function(e) {
+        const evaluatedCount = Object.keys(evaluationResults).length;
+        if(evaluatedCount === 0) {
+            e.preventDefault();
+            alert("الرجاء تقييم إجابة واحدة على الأقل قبل الحفظ.");
+            return;
+        }
+        const dataInput = document.getElementById('evaluation_data_input');
+        dataInput.value = JSON.stringify(Object.values(evaluationResults));
+    });
+</script>
+</body>
+</html>

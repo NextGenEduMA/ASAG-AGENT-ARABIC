@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>معاينة وتعديل الأسئلة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { direction: rtl; font-family: 'Tajawal', sans-serif; background-color: #f7fafc; }
+        .gradient-button { background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%); transition: all 0.3s ease; }
+        .gradient-button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
+    </style>
+</head>
+<body class="min-h-screen py-12 px-4">
+    <div class="container max-w-4xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">🎓 معاينة وتعديل الأسئلة</h1>
+            <p class="text-gray-600">راجع الأسئلة المُولدة وعدلها حسب الحاجة قبل الحفظ.</p>
+        </div>
+
+        <form id="questions-form" action="{{ url_for('save_questions') }}" method="POST">
+            <input type="hidden" name="preview_id" value="{{ preview_id }}">
+            <input type="hidden" name="questions" id="questions-input">
+            <input type="hidden" name="original_content" value="{{ content }}">
+            <div id="questions-container" class="space-y-6">
+                {% for qa in questions %}
+                <div class="question-card bg-white rounded-2xl shadow-md p-6" data-index="{{ loop.index0 }}">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-medium mb-2">السؤال {{ loop.index }}</label>
+                        <textarea class="question-text w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3">{{ qa.question }}</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">الإجابة</label>
+                        <textarea class="answer-text w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3">{{ qa.answer }}</textarea>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            </div>
+
+            <div class="mt-8 flex justify-end space-x-4 space-x-reverse">
+                <a href="{{ url_for('index') }}" class="px-6 py-3 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors">إلغاء</a>
+                <button type="submit" class="gradient-button px-8 py-3 text-white font-semibold rounded-lg">حفظ الأسئلة</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('questions-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const editedQuestions = [];
+            document.querySelectorAll('.question-card').forEach(card => {
+                const questionTextarea = card.querySelector('.question-text');
+                const answerTextarea = card.querySelector('.answer-text');
+
+                if (questionTextarea && answerTextarea) {
+                    const question = questionTextarea.value.trim();
+                    const answer = answerTextarea.value.trim();
+                    if (question && answer) {
+                        editedQuestions.push({ question, answer });
+                    }
+                }
+            });
+
+            document.getElementById('questions-input').value = JSON.stringify(editedQuestions);
+            this.submit();
+        });
+    </script>
+</body>
+</html>
