@@ -75,6 +75,7 @@ Content:
 
 ### Core Functionality
 - **AI Question Generation**: Generate educational questions and answers from Arabic text content using Google Gemini 1.5 Flash
+- **Professor Review & Editing**: Professors can modify AI-generated questions before publishing to students
 - **Intelligent Evaluation**: Evaluate student answers using semantic similarity with Sentence Transformers
 - **Difficulty Levels**: Support for different educational levels (grades 3-6)
 - **Arabic Language Support**: Full Arabic interface with RTL support
@@ -91,8 +92,9 @@ Content:
 ### User Interface
 - **Responsive Design**: Mobile-friendly Arabic interface
 - **Interactive Preview**: Edit AI-generated questions before saving
+- **Professor Control**: Full editing capabilities before student access
 - **Visual Feedback**: Progress indicators and score visualization based on AI evaluation
-- **Multi-step Workflow**: Generate → Preview → Save → Evaluate (all AI-powered)
+- **Multi-step Workflow**: Generate → Preview → Edit → Save → Evaluate (all AI-powered)
 
 ## 🧠 Deep Learning Implementation Details
 
@@ -196,11 +198,18 @@ def evaluate_answer(student_answer, model_answer):
 1. **Input Content**: Enter Arabic text directly or upload a .txt file
 2. **Configure AI Settings**: Choose number of questions (1-10) and difficulty level (1-6)
 3. **AI Generation**: Click "صياغة الأسئلة" to trigger Gemini AI question generation
-4. **Preview & Edit**: Review AI-generated questions before saving
-5. **Save**: Save AI-generated questions to database for future use
+4. **Professor Review**: Review and edit AI-generated questions before publishing
+5. **Save & Publish**: Save edited questions to database for student access
+
+### Professor Workflow
+1. **AI Generation**: AI creates initial questions and answers
+2. **Preview Interface**: Professor sees all AI-generated content
+3. **Editing Capabilities**: Full control to modify questions and answers
+4. **Quality Control**: Ensure educational standards and accuracy
+5. **Publishing**: Only approved content reaches students
 
 ### AI-Powered Answer Evaluation
-1. **Select Question Set**: Choose from AI-generated question sets
+1. **Select Question Set**: Choose from professor-approved question sets
 2. **Answer Questions**: Students can answer questions in Arabic
 3. **AI Evaluation**: Receive instant scoring using semantic similarity
 4. **Track Progress**: View AI-generated evaluation history and average scores
@@ -234,19 +243,23 @@ def evaluate_answer(student_answer, model_answer):
 
 ## 📊 AI Data Schema
 
-### Questions Collection (AI-Generated)
+### Questions Collection (AI-Generated, Professor-Edited)
 ```json
 {
   "preview_id": "uuid",
   "questions": [
     {
-      "question": "AI-generated Arabic question text",
-      "answer": "AI-generated Arabic answer text"
+      "question": "Professor-edited Arabic question text",
+      "answer": "Professor-edited Arabic answer text",
+      "original_ai_question": "Original AI-generated question",
+      "original_ai_answer": "Original AI-generated answer",
+      "edited_by_professor": true
     }
   ],
   "content": "Original Arabic content",
   "timestamp": "unix_timestamp",
-  "ai_model": "gemini-1.5-flash-latest"
+  "ai_model": "gemini-1.5-flash-latest",
+  "professor_approval": true
 }
 ```
 
@@ -258,7 +271,7 @@ def evaluate_answer(student_answer, model_answer):
     {
       "question_index": 0,
       "student_answer": "Arabic answer",
-      "model_answer": "AI-generated answer",
+      "model_answer": "Professor-approved answer",
       "score": 8.5,
       "feedback": "AI-generated Arabic feedback",
       "similarity_score": 0.85
@@ -301,8 +314,8 @@ Agentic_Ai/
 ├── requirements.txt      # Python dependencies including AI libraries
 ├── templates/            # HTML templates
 │   ├── index.html       # Main interface
-│   ├── preview.html     # AI-generated question preview
-│   ├── questions.html   # Saved AI-generated questions
+│   ├── preview.html     # AI-generated question preview with editing
+│   ├── questions.html   # Saved professor-approved questions
 │   └── evaluate.html    # AI-powered evaluation interface
 ├── uploads/             # File upload directory
 ├── Texts/              # Educational materials (for RAG)
