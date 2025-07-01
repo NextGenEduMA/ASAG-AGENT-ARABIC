@@ -219,6 +219,57 @@ def evaluate_answer(student_answer, model_answer):
 - Use `access_chromadb.py` for advanced vector database operations
 - Supports retrieval-augmented generation (RAG) for enhanced question creation
 
+## 🔍 RAG (Retrieval-Augmented Generation) Implementation
+
+### What is RAG?
+RAG combines the power of information retrieval with generative AI to create more accurate and contextually relevant educational content. Our system uses ChromaDB as a vector database to store and retrieve relevant educational materials.
+
+### RAG Architecture
+```
+[Educational Text] → [Vector Embeddings] → [ChromaDB Storage]
+                                              ↓
+[Question Generation] ← [Retrieved Context] ← [Semantic Search]
+```
+
+### RAG Features
+- **Semantic Search**: Find relevant educational content using vector similarity
+- **Context Enhancement**: Improve question generation with retrieved knowledge
+- **Educational Materials**: Store and access educational texts from `Texts/` directory
+- **Multi-language Support**: Arabic text embedding and retrieval
+
+### RAG Implementation Details
+
+#### Vector Storage
+```python
+# Store questions with embeddings
+if chroma_collection is not None:
+    ids = [str(uuid.uuid4()) for _ in questions]
+    docs = [qa['question'] for qa in questions]
+    metadatas = [{'answer': qa['answer']} for qa in questions]
+    chroma_collection.add(ids=ids, documents=docs, metadatas=metadatas)
+```
+
+#### Semantic Retrieval
+```python
+# Retrieve similar questions/content
+results = chroma_collection.query(
+    query_texts=["user query in Arabic"],
+    n_results=5
+)
+```
+
+### RAG Use Cases
+1. **Enhanced Question Generation**: Use similar existing questions to improve new question quality
+2. **Content Recommendation**: Suggest relevant educational materials
+3. **Duplicate Detection**: Identify similar questions to avoid repetition
+4. **Knowledge Base**: Build a searchable repository of educational content
+
+### RAG Benefits
+- **Improved Accuracy**: Generate questions based on proven educational content
+- **Consistency**: Maintain educational standards across question sets
+- **Efficiency**: Reuse and adapt existing high-quality content
+- **Scalability**: Build upon accumulated educational knowledge
+
 ## 🏗️ AI Architecture
 
 ### Backend Technologies
@@ -360,12 +411,13 @@ The application runs on `http://localhost:5000` with debug mode enabled.
 - **Model Size**: ~420MB
 - **Inference Speed**: ~100ms per sentence pair
 
-### ChromaDB Vector Database
+### ChromaDB Vector Database (RAG Engine)
 - **Embedding Function**: Google Generative AI API
 - **Vector Dimension**: 768 (compatible with mpnet-base-v2)
 - **Distance Metric**: Cosine similarity
-- **Storage**: Persistent vector storage
+- **Storage**: Persistent vector storage for RAG
 - **Query Speed**: Sub-second similarity search
+- **RAG Capabilities**: Context retrieval for enhanced generation
 
 ## 📝 License
 
@@ -382,22 +434,22 @@ Developed by Siham EL kouaze
 ## 📸 Screenshots
 
 ### 1. Main Interface - AI Question Generation
-![Screen 1](screenshots/1.png)
+![Screen 1](screenshots/1.jpg)
 *The main interface where users can input Arabic educational text and configure AI settings for intelligent question generation using Google Gemini*
 
 ### 2. AI Question Preview & Professor Editing
-![Screen 2](screenshots/2.png)
+![Screen 2](screenshots/2.jpg)
 *Preview interface displaying AI-generated questions with full editing capabilities for professors to review and modify before publishing to students*
 
 ### 3. Student Evaluation Interface
-![Screen 3](screenshots/3.png)
+![Screen 3](screenshots/3.jpg)
 *Student interface for answering questions with the original reference text displayed, featuring Arabic RTL support and clean design*
 
 ### 4. AI-Powered Answer Evaluation & Feedback
-![Screen 4](screenshots/4.png)
+![Screen 4](screenshots/4.jpg)
 *Real-time AI evaluation showing semantic similarity scores and personalized feedback in Arabic using advanced deep learning models*
 
 ### ChromaDB Vector Database Storage
-![ChromaDB Storage](screenshots/chromadb.png)
+![ChromaDB Storage](screenshots/chromadb.jpg)
 *JSON view of the ChromaDB vector database showing stored questions and answers with embeddings for semantic search and RAG capabilities*
 
