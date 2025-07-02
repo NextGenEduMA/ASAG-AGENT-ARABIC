@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Main ASAG Application
+  asag-app:
+    build: .
+    container_name: asag-arabic-app
+    ports:
+      - "5000:5000"
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - MONGO_URI=mongodb://mongo:27017/asag_database
+      - SECRET_KEY=${SECRET_KEY:-default-secret-key}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    depends_on:
+      - mongo
+      - chromadb
+    networks:
+      - asag-network
+    restart: unless-stopped
+
+  # MongoDB Database
+  mongo:
+    image: mongo:7.0
+    container_name: asag-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=asag_database
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - asag-network
+    restart: unless-stopped
+
+  # ChromaDB Vector Database
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: asag-chromadb
+    ports:
+      - "8000:8000"
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_HTTP_PORT=8000
+    volumes:
+      - chroma_data:/chroma/chroma
+    networks:
+      - asag-network
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
+  chroma_data:
+
+networks:
+  asag-network:
+    driver: bridge
